@@ -3,3 +3,9 @@ extNameDev: Nest for Claude (dev)
 extDescription: Organize your claude.ai conversations into nested folders per project. Stored locally, no network requests.
 optionsTitle: Nest for Claude settings
 optionsDescription: Your folders are stored only in this browser. Nothing is sent over the network.
+foldersSectionTitle: Folders
+folderEmpty: No conversations in this folder yet.
+projectFoldersEmpty: No folders for this project yet.
+folderConversationCount:
+  1: 1 conversation
+  n: $1 conversations
