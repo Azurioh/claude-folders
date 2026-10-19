@@ -13,6 +13,7 @@ describe('diagnose', () => {
       projectLinks: 9,
       expandedSidebarProjects: 1,
       projectRecentsFound: true,
+      pageKind: 'project',
     });
   });
 
@@ -23,6 +24,7 @@ describe('diagnose', () => {
         projectLinks: 10,
         expandedSidebarProjects: 1,
         projectRecentsFound: false,
+        pageKind: 'chat',
       },
     );
   });
@@ -42,6 +44,17 @@ describe('diagnose', () => {
       projectLinks: 0,
       expandedSidebarProjects: 0,
       projectRecentsFound: true,
+      pageKind: 'project',
+    });
+  });
+
+  it('reports any other page as other', () => {
+    expect(diagnose({ root: el({ tag: 'div' }), pathname: '/new' })).toEqual({
+      chatLinks: 0,
+      projectLinks: 0,
+      expandedSidebarProjects: 0,
+      projectRecentsFound: false,
+      pageKind: 'other',
     });
   });
 });
