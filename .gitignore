@@ -2,7 +2,7 @@
 node_modules/
 
 # WXT
-.output/
+dist/
 .wxt/
 web-ext.config.ts
 

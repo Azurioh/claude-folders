@@ -51,4 +51,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: gh release upload "$TAG_NAME" .output/*.zip --clobber
+        run: gh release upload "$TAG_NAME" dist/*.zip --clobber

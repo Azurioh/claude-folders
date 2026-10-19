@@ -21,8 +21,8 @@ pnpm dev       # opens Chrome with the extension loaded and hot reload
 | -------------------- | ----------------------------------------------------------------- |
 | `pnpm dev`           | Dev build for Chrome with hot reload (named "Nest for Claude (dev)") |
 | `pnpm dev:firefox`   | Same, for Firefox                                                 |
-| `pnpm build`         | Production build for Chrome in `.output/chrome-mv3`               |
-| `pnpm build:firefox` | Production build for Firefox in `.output/firefox-mv3`             |
+| `pnpm build`         | Production build for Chrome in `dist/chrome-mv3`               |
+| `pnpm build:firefox` | Production build for Firefox in `dist/firefox-mv3`             |
 | `pnpm zip`           | Store zip for Chrome                                              |
 | `pnpm zip:firefox`   | Store zip for Firefox plus the sources zip required by AMO        |
 | `pnpm typecheck`     | `wxt prepare` then `tsc --noEmit`                                 |
