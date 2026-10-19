@@ -1,0 +1,313 @@
+/* Floating panels, injected inside the shadow root of the panel layer (see claude.content.ts), so
+   claude.ai's styles never reach them and they never reach claude.ai. Background, text color and
+   font are copied from the page around the anchor at runtime (panel-theme.ts). */
+
+.nfc-panel {
+  position: fixed;
+  z-index: 10000;
+  box-sizing: border-box;
+  width: 252px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: start;
+}
+
+.nfc-panel *,
+.nfc-panel *::before,
+.nfc-panel *::after {
+  box-sizing: border-box;
+}
+
+.nfc-panel-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.nfc-panel-label {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.nfc-panel-text {
+  margin: 0;
+}
+
+.nfc-panel-hint {
+  margin-top: 2px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.nfc-panel-empty:empty {
+  display: none;
+}
+
+.nfc-panel-empty {
+  padding: 6px 0;
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.nfc-input {
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.nfc-input:focus-visible {
+  border-color: #d97757;
+  box-shadow: 0 0 0 1px #d97757;
+}
+
+.nfc-emoji-field {
+  position: relative;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.nfc-emoji-input {
+  width: 64px;
+  text-align: center;
+  font-size: 16px;
+}
+
+/* The folder icon shown in the emoji field while it is empty: the folder's current visual. */
+.nfc-emoji-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.nfc-emoji-placeholder[hidden] {
+  display: none;
+}
+
+.nfc-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nfc-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.nfc-emoji-btn,
+.nfc-swatch,
+.nfc-adder-item,
+.nfc-button {
+  margin: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.nfc-emoji-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.nfc-emoji-btn:hover,
+.nfc-emoji-btn[aria-pressed="true"] {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.nfc-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.nfc-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.nfc-swatch-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--nfc-swatch);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.nfc-swatch-none {
+  background: linear-gradient(
+    135deg,
+    transparent 46%,
+    color-mix(in srgb, currentColor 55%, transparent) 46% 54%,
+    transparent 54%
+  );
+}
+
+.nfc-swatch[aria-pressed="true"] .nfc-swatch-dot {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.nfc-adder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 260px;
+  overflow: auto;
+  margin: 0 -4px;
+}
+
+.nfc-adder-list[hidden] {
+  display: none;
+}
+
+.nfc-adder-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  text-align: start;
+}
+
+.nfc-adder-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nfc-adder-icon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.nfc-adder-item:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.nfc-adder-item:hover .nfc-adder-icon,
+.nfc-adder-item:focus-visible .nfc-adder-icon {
+  opacity: 1;
+  color: #d97757;
+}
+
+.nfc-panel-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.nfc-button {
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.nfc-button-secondary {
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.nfc-button-secondary:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+/* White on these backgrounds is above 4.5:1. */
+.nfc-button-primary {
+  background: #ae5630;
+  color: #fff;
+}
+
+.nfc-button-danger {
+  background: #c0392b;
+  color: #fff;
+}
+
+.nfc-button-primary:hover,
+.nfc-button-danger:hover {
+  filter: brightness(1.1);
+}
+
+.nfc-emoji-btn:focus-visible,
+.nfc-swatch:focus-visible,
+.nfc-adder-item:focus-visible,
+.nfc-button:focus-visible {
+  outline: 2px solid #d97757;
+  outline-offset: 1px;
+}
+
+.nfc-icon {
+  display: block;
+}
+
+/* Touch screens: 44px targets, and 16px fields so mobile browsers do not zoom on focus. */
+@media (pointer: coarse) {
+  .nfc-panel {
+    width: 300px;
+  }
+
+  .nfc-input {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .nfc-emoji-btn,
+  .nfc-adder-item,
+  .nfc-button {
+    min-height: 44px;
+  }
+
+  .nfc-emoji-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .nfc-swatch {
+    width: 44px;
+    height: 44px;
+  }
+
+  .nfc-palette {
+    gap: 0;
+  }
+}
