@@ -18,6 +18,7 @@ import { ProjectFoldersStore } from '@/features/folders/ui/project-folders.store
 import { openThroughNativeLink } from '@/features/folders/ui/spa-navigation';
 import { currentChatId } from '@/shared/claude-dom/claude-ids';
 import { findProjectRecents, type ProjectRecents } from '@/shared/claude-dom/project-recents';
+import { COLOR_SCHEME_QUERY, THEME_ROOT_ATTRIBUTES } from '@/shared/claude-dom/selectors';
 import {
   findSidebarProjectGroups,
   type SidebarProjectGroup,
@@ -86,6 +87,11 @@ class FoldersUiController implements FoldersUi {
   private readonly nativeDraggables = new NativeDraggables();
   private readonly mounts = new Map<string, Mount>();
   private readonly observer: MutationObserver;
+  private readonly themeObserver: MutationObserver;
+  private readonly colorScheme: MediaQueryList;
+  private readonly onColorSchemeChange = (): void => {
+    this.scheduleLookCopy();
+  };
   private readonly unwatchHideFiled: () => void;
   private hideFiled: boolean | null = null;
   private syncTimer: ReturnType<typeof setTimeout> | undefined;
@@ -131,6 +137,14 @@ class FoldersUiController implements FoldersUi {
       this.scheduleSync();
     });
     this.observer.observe(this.document.body, { childList: true, subtree: true });
+    this.themeObserver = new MutationObserver(() => {
+      this.scheduleLookCopy();
+    });
+    for (const root of [this.document.documentElement, this.document.body]) {
+      this.themeObserver.observe(root, { attributeFilter: [...THEME_ROOT_ATTRIBUTES] });
+    }
+    this.colorScheme = (this.document.defaultView ?? window).matchMedia(COLOR_SCHEME_QUERY);
+    this.colorScheme.addEventListener('change', this.onColorSchemeChange);
     this.unwatchHideFiled = params.hideFiled.watch((hideFiled) => {
       this.applyHideFiled(hideFiled);
     });
@@ -167,6 +181,8 @@ class FoldersUiController implements FoldersUi {
     this.panels.close();
     this.dragDrop.stop();
     this.observer.disconnect();
+    this.themeObserver.disconnect();
+    this.colorScheme.removeEventListener('change', this.onColorSchemeChange);
     clearTimeout(this.syncTimer);
     this.store.dispose();
     this.unwatchHideFiled();
@@ -180,6 +196,14 @@ class FoldersUiController implements FoldersUi {
     this.syncTimer = setTimeout(() => {
       this.sync();
     }, MUTATION_DEBOUNCE_MS);
+  }
+
+  /** The theme may have changed: copy the native row look again at the next (debounced) sync. */
+  private scheduleLookCopy(): void {
+    for (const mount of this.mounts.values()) {
+      mount.lookCopied = false;
+    }
+    this.scheduleSync();
   }
 
   private applyHideFiled(hideFiled: boolean): void {
