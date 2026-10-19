@@ -99,6 +99,7 @@ describe('startFoldersUi', () => {
       hideFiled,
       panelLayer: createPanelLayer(),
       folderIds: new SequentialFolderIdProvider(),
+      now: () => 0,
     });
     await flushPromises();
   }
@@ -194,6 +195,7 @@ describe('startFoldersUi', () => {
         hideFiled,
         panelLayer: createPanelLayer(),
         folderIds: new SequentialFolderIdProvider(),
+        now: () => 0,
       });
       await flushPromises();
       expect(sections()).toHaveLength(0);

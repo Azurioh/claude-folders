@@ -1,5 +1,6 @@
 import { i18n } from '#i18n';
 import type { ProjectFolders, Section } from '@/features/folders/domain/folders.model';
+import { rootDropAttributes } from '@/features/folders/ui/drag-markers';
 import { createElement } from '@/features/folders/ui/element';
 import { FOCUS_KEY_ATTRIBUTE, replaceKeepingFocus } from '@/features/folders/ui/focus-key';
 import {
@@ -41,7 +42,12 @@ function sidebarHeader(params: {
     document,
     tag: 'button',
     className: 'nfc-header',
-    attributes: { type: 'button', 'aria-expanded': String(open), [FOCUS_KEY_ATTRIBUTE]: 'header' },
+    attributes: {
+      type: 'button',
+      'aria-expanded': String(open),
+      [FOCUS_KEY_ATTRIBUTE]: 'header',
+      ...rootDropAttributes(),
+    },
     children: [createChevron({ document, open }), headerLabel(document)],
   });
   header.addEventListener('click', () => {
@@ -97,6 +103,7 @@ function projectPageHeader(params: {
     document,
     tag: 'div',
     className: 'nfc-header-bar',
+    attributes: rootDropAttributes(),
     children: [
       createElement({
         document,
@@ -139,7 +146,7 @@ function sectionBody(params: {
  * Renders a folders section into its container, replacing what was there and keeping keyboard
  * focus on the same control. The sidebar variant has a collapsible header button; the project
  * page variant has a heading that carries claude.ai's own heading classes, so it looks native,
- * and an explanation when the project has no folder.
+ * and an explanation when the project has no folder. Either header is the drop target of the root.
  * @param params.container - The section root to fill.
  * @param params.section - Which of the two sections is rendered.
  * @param params.state - The project to render.

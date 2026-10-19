@@ -4,6 +4,7 @@ import { el } from '@@/tests/shared/claude-dom/fixtures';
 import { describe, expect, it } from 'vitest';
 import {
   chatIdOf,
+  chatIdOfHref,
   currentChatId,
   currentProjectId,
   projectIdOf,
@@ -95,5 +96,15 @@ describe('currentProjectId', () => {
 
   it('is null on the projects index', () => {
     expect(currentProjectId('/projects')).toBeNull();
+  });
+});
+
+describe('chatIdOfHref', () => {
+  it('reads the id of a dragged conversation URL', () => {
+    expect(chatIdOfHref(`https://claude.ai/chat/${UPPER_ID}`)).toBe(ID);
+  });
+
+  it('is null for text that holds no conversation URL', () => {
+    expect(chatIdOfHref('A conversation title')).toBeNull();
   });
 });

@@ -16,7 +16,16 @@ function firstGroupOf(params: { pattern: RegExp; value: string }): string | null
  * @returns The lowercase conversation UUID, or `null` when the link is not a conversation link.
  */
 export function chatIdOf(link: Element): string | null {
-  return firstGroupOf({ pattern: CHAT_HREF_PATTERN, value: link.getAttribute('href') ?? '' });
+  return chatIdOfHref(link.getAttribute('href') ?? '');
+}
+
+/**
+ * Reads the conversation id of a URL, e.g. the `text/uri-list` of a dragged conversation link.
+ * @param href - A relative or absolute URL, or any text containing one.
+ * @returns The lowercase conversation UUID, or `null` when the text holds no conversation URL.
+ */
+export function chatIdOfHref(href: string): string | null {
+  return firstGroupOf({ pattern: CHAT_HREF_PATTERN, value: href });
 }
 
 /**

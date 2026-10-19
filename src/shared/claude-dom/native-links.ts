@@ -67,3 +67,31 @@ export function rowOf(link: Element): Element {
   }
   return row;
 }
+
+function holdsProjectLink(element: Element): boolean {
+  return (
+    element.matches(PROJECT_LINK_SELECTOR) || element.querySelector(PROJECT_LINK_SELECTOR) !== null
+  );
+}
+
+/**
+ * Finds the native conversation link a drag started on: the conversation link holding the dragged
+ * node, else, when a whole row is dragged, the only conversation link inside it. Nodes of the
+ * extension's UI, nodes holding a project link and links without a conversation id give nothing.
+ * @param target - The node a `dragstart` was fired on.
+ * @returns The dragged conversation link, or `null` when the drag is not a native conversation.
+ */
+export function draggedNativeChatLink(target: Element): HTMLAnchorElement | null {
+  if (isOwnUi(target)) {
+    return null;
+  }
+  const link = target.closest<HTMLAnchorElement>(CHAT_LINK_SELECTOR);
+  if (link !== null) {
+    return chatIdOf(link) === null ? null : link;
+  }
+  if (holdsProjectLink(target)) {
+    return null;
+  }
+  const inside = nativeChatLinks(target);
+  return inside.length === 1 ? (inside[0] ?? null) : null;
+}

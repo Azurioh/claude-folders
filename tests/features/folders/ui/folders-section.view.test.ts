@@ -39,6 +39,8 @@ function handlers(): FoldersSectionHandlers {
     onDeleteFolder: vi.fn(),
     onRenameConversation: vi.fn(),
     onUnfileConversation: vi.fn(),
+    onMoveFolder: vi.fn(),
+    onMoveConversation: vi.fn(),
   };
 }
 
@@ -318,7 +320,7 @@ describe('renderFoldersSection', () => {
   });
 
   describe('actions', () => {
-    it('gives each folder row named actions: new sub-folder, add conversations, edit, delete', () => {
+    it('gives each folder row named actions: new sub-folder, add conversations, move, edit, delete', () => {
       const root = render({ section: 'sidebar', spies: handlers() });
 
       const actions = actionsOf(folderRow({ root, name: 'Work' }));
@@ -326,6 +328,7 @@ describe('renderFoldersSection', () => {
       expect(actions.map((action) => action.getAttribute('aria-label'))).toEqual([
         'actionNewSubfolder(Work)',
         'actionAddConversations(Work)',
+        'actionMove(Work)',
         'actionEditFolder(Work)',
         'actionDeleteFolder(Work)',
       ]);
@@ -336,13 +339,14 @@ describe('renderFoldersSection', () => {
       }
     });
 
-    it('gives each conversation row named actions: rename, remove from folder', () => {
+    it('gives each conversation row named actions: move, rename, remove from folder', () => {
       const root = render({ section: 'sidebar', spies: handlers() });
 
       const link = root.querySelector('a.nfc-conv');
       const actions = link === null ? [] : actionsOf(link);
 
       expect(actions.map((action) => action.getAttribute('aria-label'))).toEqual([
+        'actionMove(Alpha chat)',
         'actionRenameConversation(Alpha chat)',
         'actionUnfileConversation(Alpha chat)',
       ]);
@@ -360,16 +364,18 @@ describe('renderFoldersSection', () => {
     it('hands folder actions to their handler with the pressed button, without toggling', () => {
       const spies = handlers();
       const root = render({ section: 'sidebar', spies });
-      const [newSubfolder, add, edit, remove] = actionsOf(folderRow({ root, name: 'Work' }));
+      const [newSubfolder, add, move, edit, remove] = actionsOf(folderRow({ root, name: 'Work' }));
 
       const event = clickAction(newSubfolder);
       clickAction(add);
+      clickAction(move);
       clickAction(edit);
       clickAction(remove);
 
       expect(event.defaultPrevented).toBe(true);
       expect(spies.onCreateFolder).toHaveBeenCalledWith({ parentId: 'work', anchor: newSubfolder });
       expect(spies.onAddConversations).toHaveBeenCalledWith({ folderId: 'work', anchor: add });
+      expect(spies.onMoveFolder).toHaveBeenCalledWith({ folderId: 'work', anchor: move });
       expect(spies.onEditFolder).toHaveBeenCalledWith({ folderId: 'work', anchor: edit });
       expect(spies.onDeleteFolder).toHaveBeenCalledWith({ folderId: 'work', anchor: remove });
       expect(spies.onToggleFolder).not.toHaveBeenCalled();
@@ -379,11 +385,16 @@ describe('renderFoldersSection', () => {
       const spies = handlers();
       const root = render({ section: 'sidebar', spies });
       const link = root.querySelector('a.nfc-conv');
-      const [rename, unfile] = link === null ? [] : actionsOf(link);
+      const [move, rename, unfile] = link === null ? [] : actionsOf(link);
 
+      clickAction(move);
       clickAction(rename);
       clickAction(unfile);
 
+      expect(spies.onMoveConversation).toHaveBeenCalledWith({
+        conversationId: CHAT_A,
+        anchor: move,
+      });
       expect(spies.onRenameConversation).toHaveBeenCalledWith({
         conversationId: CHAT_A,
         anchor: rename,

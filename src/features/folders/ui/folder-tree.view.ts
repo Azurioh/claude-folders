@@ -11,8 +11,16 @@ import {
   countConversations,
   type FolderChild,
 } from '@/features/folders/domain/folders.queries';
+import {
+  conversationRowDragAttributes,
+  folderRowDragAttributes,
+} from '@/features/folders/ui/drag-markers';
 import { createElement } from '@/features/folders/ui/element';
-import { FOCUS_KEY_ATTRIBUTE } from '@/features/folders/ui/focus-key';
+import {
+  conversationRowFocusKey,
+  FOCUS_KEY_ATTRIBUTE,
+  folderRowFocusKey,
+} from '@/features/folders/ui/focus-key';
 import { createIcon } from '@/features/folders/ui/icons';
 import { createRowItem, type RowAction } from '@/features/folders/ui/row-actions';
 
@@ -35,8 +43,16 @@ export interface FolderEditingHandlers {
   onUnfileConversation(params: { conversationId: ConversationId; folderId: FolderId }): void;
 }
 
+/** Reactions of a rendered folder tree to its "Move to…" actions; each opens the move panel. */
+export interface FolderMoveHandlers {
+  /** "Move to…" was pressed on a folder. */
+  onMoveFolder(params: { folderId: FolderId; anchor: HTMLElement }): void;
+  /** "Move to…" was pressed on a conversation. */
+  onMoveConversation(params: { conversationId: ConversationId; anchor: HTMLElement }): void;
+}
+
 /** Reactions of a rendered folder tree to user actions. */
-export interface FolderTreeHandlers extends FolderEditingHandlers {
+export interface FolderTreeHandlers extends FolderEditingHandlers, FolderMoveHandlers {
   /** A folder row was activated (click, Enter or Space). */
   onToggleFolder(folderId: FolderId): void;
   /** A conversation link was clicked; the handler decides how to navigate. */
@@ -113,7 +129,8 @@ function folderRow(params: { context: TreeContext; folder: Folder }): HTMLButton
     attributes: {
       type: 'button',
       'aria-expanded': String(folder.open),
-      [FOCUS_KEY_ATTRIBUTE]: `folder:${folder.id}`,
+      [FOCUS_KEY_ATTRIBUTE]: folderRowFocusKey(folder.id),
+      ...folderRowDragAttributes(folder.id),
     },
     children: [
       createChevron({ document, open: folder.open }),
@@ -147,6 +164,14 @@ function folderActions(params: { context: TreeContext; folder: Folder }): RowAct
       focusKey: `add-conversations:${id}`,
       onActivate: (anchor) => {
         handlers.onAddConversations({ folderId: id, anchor });
+      },
+    },
+    {
+      icon: 'folderInput',
+      label: i18n.t('actionMove', [name]),
+      focusKey: `move:folder:${id}`,
+      onActivate: (anchor) => {
+        handlers.onMoveFolder({ folderId: id, anchor });
       },
     },
     {
@@ -223,6 +248,14 @@ function conversationActions(params: {
   const { handlers } = context;
   return [
     {
+      icon: 'folderInput',
+      label: i18n.t('actionMove', [conversation.title]),
+      focusKey: `move:conversation:${conversationId}`,
+      onActivate: (anchor) => {
+        handlers.onMoveConversation({ conversationId, anchor });
+      },
+    },
+    {
       icon: 'pencil',
       label: i18n.t('actionRenameConversation', [conversation.title]),
       focusKey: `rename-conversation:${conversationId}`,
@@ -254,7 +287,8 @@ function conversationRow(params: {
     attributes: {
       href: `/chat/${conversationId}`,
       title: conversation.title,
-      [FOCUS_KEY_ATTRIBUTE]: `conversation:${conversationId}`,
+      [FOCUS_KEY_ATTRIBUTE]: conversationRowFocusKey(conversationId),
+      ...conversationRowDragAttributes(conversationId),
     },
     children: [
       createElement({
@@ -300,7 +334,8 @@ function renderChildren(params: {
 /**
  * Renders the direct children of a folder (or of the root) and, below each open folder, its own
  * children. Folder rows are buttons exposing `aria-expanded`; conversations are links to their
- * chat, the current one marked with `aria-current="page"`.
+ * chat, the current one marked with `aria-current="page"`. Both are drag sources, and folder rows
+ * are drop targets (`drag-markers.ts`).
  * @param params.document - The owner document.
  * @param params.state - The project to render.
  * @param params.parentId - The folder whose children are rendered, or `null` for the root.

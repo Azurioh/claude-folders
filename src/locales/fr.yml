@@ -45,3 +45,11 @@ deleteFolderConfirm: "Supprimer « $1 » ? Son contenu remonte d'un niveau."
 renameConversationHint: Seul le titre affiché dans vos dossiers change.
 adderEmpty: Aucune conversation disponible
 adderHint: Liste les conversations non classées affichées dans la page ou la barre latérale.
+actionMove: "Déplacer « $1 » vers…"
+panelMoveTitle: "Déplacer « $1 »"
+fieldFilterFolders: Filtrer les dossiers
+moveDestinationRoot: Premier niveau
+moveDestinationNoFolder: Aucun dossier
+moveCurrentLocation: Actuel
+moveEmpty: Aucun dossier correspondant
+conversationUntitled: Sans titre
