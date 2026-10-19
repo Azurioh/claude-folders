@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# WXT
+.output/
+.wxt/
+web-ext.config.ts
+
+# Test & coverage
+coverage/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,5 @@
+extName: Nest for Claude
+extNameDev: Nest for Claude (dev)
+extDescription: Organisez vos conversations claude.ai en dossiers imbriqués par projet. Stockage local, aucune requête réseau.
+optionsTitle: Paramètres de Nest for Claude
+optionsDescription: Vos dossiers sont stockés uniquement dans ce navigateur. Rien n'est envoyé sur le réseau.
