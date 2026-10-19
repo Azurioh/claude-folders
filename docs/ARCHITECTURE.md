@@ -60,8 +60,8 @@ entrypoints  ->  features/folders/ui  ->  features/folders/storage  ->  features
 1. The content script starts on `https://claude.ai/*`.
 2. `shared/claude-dom` locates the sidebar and project page, and extracts the current project and
    the visible conversations (IDs and titles).
-3. `features/folders/storage` loads the stored folder tree for that project and migrates it to the
-   current schema if needed.
+3. `features/folders/storage` loads the stored folder tree for that project (migrated to the current
+   schema if needed, then validated).
 4. `features/folders/domain` computes the tree to display (nesting, ordering, which conversations
    are filed).
 5. `features/folders/ui` renders the folder sections next to claude.ai's own lists. Floating panels
@@ -71,14 +71,47 @@ entrypoints  ->  features/folders/ui  ->  features/folders/storage  ->  features
 
 The extension makes no network requests at any step.
 
-## Storage schema versioning
+## Storage
 
-- All data lives in `browser.storage.local` under a single versioned document that carries a
-  `schemaVersion` number.
-- Each schema change adds a migration `vN -> vN+1`: a pure function from the old shape to the new
-  one, unit tested with stored samples of the old shape.
-- On load, the repository applies every pending migration in order, then writes the result back.
-  Data from a newer, unknown version is never overwritten.
+`domain/folders.repository.ts` declares the `FoldersRepository` port (`load`, `save`, `watch`);
+`storage/browser-folders.repository.ts` implements it with WXT's storage API
+(`wxt/utils/storage`) over `browser.storage.local`.
+
+### Key layout
+
+| Key (`browser.storage.local`) | Value                                                   |
+| ----------------------------- | ------------------------------------------------------- |
+| `projects:<projectId>`        | the `ProjectFolders` tree of one claude.ai project      |
+| `settings:hideFiled`          | boolean, hide filed conversations (default `true`)      |
+| `<key>$`                      | WXT metadata of `<key>`, holding the schema version `v` |
+
+- One key per project, so tabs editing different projects never overwrite each other. Every tab
+  watches the key of its project (`storage.onChanged`) and re-renders on changes from other tabs.
+- `projectId` must be a UUID (claude.ai project id). It is lowercased before building the key, so
+  `ABC…` and `abc…` share one key; anything else is rejected with `InvalidProjectIdError` before
+  storage is touched.
+
+### Versioning
+
+- Every item is defined with `storage.defineItem` and `version: 1`. The version is recorded in the
+  item's metadata on first write.
+- A schema change bumps the item's `version` and adds a `migrations[N]` entry: a pure function from
+  the vN-1 shape to the vN shape, unit tested with stored samples of the old shape. WXT runs pending
+  migrations in order when the item is defined and writes the result back.
+- WXT refuses to migrate data from a newer, unknown version (downgrade) and logs an error; such data
+  is then only read through validation (see below).
+
+### Validation
+
+- Nothing read from storage is trusted: `storage/stored-project.parser.ts` validates every field of
+  the current schema with Zod (`zod/mini`, chosen for content-script bundle size): own keys only,
+  `parentId` `null` or a string, folder `id` equal to its key, optional `emoji`/`color` strings,
+  boolean flags. Unknown fields are dropped. Id-keyed records are walked by their own entries and
+  rebuilt with `Object.fromEntries` instead of `z.record`, which skips `__proto__` keys, so ids
+  such as `__proto__` stay plain entries.
+- Missing data reads as an empty project. Invalid data also reads as an empty project, logs one
+  `console.warn` prefixed with `[nest-for-claude]`, and is left untouched in storage: reads never
+  write back. It is replaced only when the user next changes that project.
 
 ## Rendering rules
 

@@ -8,7 +8,9 @@ The extension stores, in your browser only:
 
 - the folders you create: names, colors and emojis, and how they are nested;
 - the claude.ai conversations you put in those folders: their conversation IDs and titles;
-- the project each folder belongs to.
+- the ID of the claude.ai project each folder belongs to;
+- your display preferences: which folders and folder sections are expanded, and whether filed
+  conversations are hidden from claude.ai's own lists.
 
 It does **not** read or store the content of your conversations.
 
