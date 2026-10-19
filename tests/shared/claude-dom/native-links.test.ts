@@ -3,7 +3,12 @@
 import { el, elementOf, fakeId, linkTo, loadFixture } from '@@/tests/shared/claude-dom/fixtures';
 import { describe, expect, it } from 'vitest';
 import { chatIdOf } from '@/shared/claude-dom/claude-ids';
-import { isOwnUi, nativeChatLinks, rowOf } from '@/shared/claude-dom/native-links';
+import {
+  draggedNativeChatLink,
+  isOwnUi,
+  nativeChatLinks,
+  rowOf,
+} from '@/shared/claude-dom/native-links';
 import { OWN_UI_SELECTOR } from '@/shared/claude-dom/selectors';
 
 const ID_A = '0f1e2d3c-4b5a-4987-8a6b-5c4d3e2f1a0b';
@@ -114,5 +119,47 @@ describe('rowOf', () => {
     });
     el({ tag: 'div', children: [fourth] });
     expect(rowOf(link)).toBe(fourth);
+  });
+});
+
+describe('draggedNativeChatLink', () => {
+  const PROJECT_ID = '2f1e2d3c-4b5a-4987-8a6b-5c4d3e2f1a0b';
+
+  it('is the conversation link holding the dragged node', () => {
+    const label = el({ tag: 'span', children: ['Title'] });
+    const link = el({ tag: 'a', attributes: { href: `/chat/${ID_A}` }, children: [label] });
+    expect(draggedNativeChatLink(label)).toBe(link);
+  });
+
+  it('is the only conversation link of a dragged row', () => {
+    const link = el({ tag: 'a', attributes: { href: `/chat/${ID_A}` } });
+    const row = el({ tag: 'div', children: [link, el({ tag: 'button' })] });
+    expect(draggedNativeChatLink(row)).toBe(link);
+  });
+
+  it('is null for a node holding several conversations or a project link', () => {
+    const list = el({
+      tag: 'div',
+      children: [
+        el({ tag: 'a', attributes: { href: `/chat/${ID_A}` } }),
+        el({ tag: 'a', attributes: { href: `/chat/${ID_B}` } }),
+      ],
+    });
+    const group = el({
+      tag: 'div',
+      children: [
+        el({ tag: 'a', attributes: { href: `/project/${PROJECT_ID}` } }),
+        el({ tag: 'a', attributes: { href: `/chat/${ID_A}` } }),
+      ],
+    });
+    expect(draggedNativeChatLink(list)).toBeNull();
+    expect(draggedNativeChatLink(group)).toBeNull();
+  });
+
+  it("is null inside the extension's UI and for links without a conversation id", () => {
+    const own = el({ tag: 'a', attributes: { href: `/chat/${ID_A}` } });
+    el({ tag: 'div', attributes: { class: OWN_UI_CLASS }, children: [own] });
+    expect(draggedNativeChatLink(own)).toBeNull();
+    expect(draggedNativeChatLink(el({ tag: 'a', attributes: { href: '/chat/new' } }))).toBeNull();
   });
 });
