@@ -1,8 +1,6 @@
 extName: Nest for Claude
 extNameDev: Nest for Claude (dev)
 extDescription: Organize your claude.ai conversations into nested folders per project. Stored locally, no network requests.
-optionsTitle: Nest for Claude settings
-optionsDescription: Your folders are stored only in this browser. Nothing is sent over the network.
 foldersSectionTitle: Folders
 folderEmpty: No conversations in this folder yet.
 projectFoldersEmpty: No folders for this project yet.
@@ -53,3 +51,55 @@ moveDestinationNoFolder: No folder
 moveCurrentLocation: Current
 moveEmpty: No matching folder
 conversationUntitled: Untitled
+sectionDisplayTitle: Display
+hideFiledLabel: Hide filed conversations in claude.ai lists
+hideFiledHint: "On: conversations you put in a folder are hidden from claude.ai's own lists. Off: they stay there, dimmed."
+sectionBackupTitle: Backup
+backupDescription: Save all your folders to a file, or restore them from one. The file stays on your device.
+countProjects:
+  1: 1 project
+  n: $1 projects
+countFolders:
+  1: 1 folder
+  n: $1 folders
+countConversations:
+  1: 1 filed conversation
+  n: $1 filed conversations
+storedSummary: "Stored in this browser: $1, $2, $3."
+buttonExportBackup: Export backup
+buttonImportBackup: Import backup…
+importDropHint: You can also drop a backup file here.
+exportDone: "Exported $1, $2, $3 to $4."
+exportFailed: The backup could not be created. Try again.
+importSummary: "Backup from $1: $2, $3, $4."
+importConfirm: Replace all current folders with this backup?
+buttonReplace: Replace
+importDone: "Backup imported. Stored now: $1, $2, $3."
+importFailed: The backup could not be saved completely. Import it again to finish.
+backupErrorTooLarge: This file is larger than $1 MB, the limit for a backup. Nothing was imported.
+backupErrorUnreadable: This file could not be read. Nothing was imported.
+backupErrorNotJson: This file is not valid JSON. Nothing was imported.
+backupErrorWrongFormat: This file is not a Nest for Claude backup. Nothing was imported.
+backupErrorUnsupportedVersion: This backup comes from an unknown version of Nest for Claude. Nothing was imported.
+backupErrorInvalidExportedAt: The export date of this backup is invalid. Nothing was imported.
+backupErrorInvalidSettings: The settings of this backup are invalid. Nothing was imported.
+backupErrorInvalidProjects: The project list of this backup is invalid. Nothing was imported.
+backupErrorInvalidProjectId: Project $1 of this backup does not have a valid claude.ai project id. Nothing was imported.
+backupErrorDuplicateProjectId: Project $1 of this backup is listed twice. Nothing was imported.
+backupErrorInvalidProject: The folders of project $1 in this backup are invalid. Nothing was imported.
+copyFailed: Copy failed. The diagnostic is selected below; copy it with your keyboard.
+sectionDangerTitle: Danger zone
+deleteAllDescription: Deletes the folders of every project and your settings from this browser.
+buttonDeleteAll: Delete all data
+deleteAllConfirm: Delete all folders and settings? This cannot be undone.
+deleteAllDone: All data was deleted.
+deleteAllFailed: The data could not be deleted. Try again.
+footerSource: Source code on GitHub
+footerNotAffiliated: Not affiliated with Anthropic.
+popupVersion: Version $1
+buttonCopyDiagnostic: Copy diagnostic
+diagnosticCopied: "Diagnostic copied: paste it into your bug report."
+buttonOpenBackupPage: Export or import…
+backupTabHint: Opens in a tab, because Firefox closes this menu when a file dialog opens.
+backupPageTitle: Nest for Claude backup
+backupPageDescription: Export your folders to a file, or restore them from one. The file stays on your device.

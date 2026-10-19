@@ -1,8 +1,6 @@
 extName: Nest for Claude
 extNameDev: Nest for Claude (dev)
 extDescription: Organisez vos conversations claude.ai en dossiers imbriqués par projet. Stockage local, aucune requête réseau.
-optionsTitle: Paramètres de Nest for Claude
-optionsDescription: Vos dossiers sont stockés uniquement dans ce navigateur. Rien n'est envoyé sur le réseau.
 foldersSectionTitle: Dossiers
 folderEmpty: Aucune conversation dans ce dossier pour l'instant.
 projectFoldersEmpty: Aucun dossier pour ce projet pour l'instant.
@@ -53,3 +51,55 @@ moveDestinationNoFolder: Aucun dossier
 moveCurrentLocation: Actuel
 moveEmpty: Aucun dossier correspondant
 conversationUntitled: Sans titre
+sectionDisplayTitle: Affichage
+hideFiledLabel: Masquer les conversations classées dans les listes de claude.ai
+hideFiledHint: "Activé : les conversations rangées dans un dossier sont masquées des listes de claude.ai. Désactivé : elles y restent, estompées."
+sectionBackupTitle: Sauvegarde
+backupDescription: Enregistrez tous vos dossiers dans un fichier, ou restaurez-les depuis un fichier. Le fichier reste sur votre appareil.
+countProjects:
+  1: 1 projet
+  n: $1 projets
+countFolders:
+  1: 1 dossier
+  n: $1 dossiers
+countConversations:
+  1: 1 conversation classée
+  n: $1 conversations classées
+storedSummary: "Stocké dans ce navigateur : $1, $2, $3."
+buttonExportBackup: Exporter une sauvegarde
+buttonImportBackup: Importer une sauvegarde…
+importDropHint: Vous pouvez aussi déposer un fichier de sauvegarde ici.
+exportDone: "$1, $2, $3 exportés dans $4."
+exportFailed: La sauvegarde n'a pas pu être créée. Réessayez.
+importSummary: "Sauvegarde du $1 : $2, $3, $4."
+importConfirm: Remplacer tous les dossiers actuels par cette sauvegarde ?
+buttonReplace: Remplacer
+importDone: "Sauvegarde importée. Stocké maintenant : $1, $2, $3."
+importFailed: La sauvegarde n'a pas pu être enregistrée entièrement. Importez-la de nouveau pour terminer.
+backupErrorTooLarge: Ce fichier dépasse $1 Mo, la limite d'une sauvegarde. Rien n'a été importé.
+backupErrorUnreadable: Ce fichier n'a pas pu être lu. Rien n'a été importé.
+backupErrorNotJson: Ce fichier n'est pas un JSON valide. Rien n'a été importé.
+backupErrorWrongFormat: Ce fichier n'est pas une sauvegarde Nest for Claude. Rien n'a été importé.
+backupErrorUnsupportedVersion: Cette sauvegarde provient d'une version inconnue de Nest for Claude. Rien n'a été importé.
+backupErrorInvalidExportedAt: La date d'export de cette sauvegarde est invalide. Rien n'a été importé.
+backupErrorInvalidSettings: Les paramètres de cette sauvegarde sont invalides. Rien n'a été importé.
+backupErrorInvalidProjects: La liste des projets de cette sauvegarde est invalide. Rien n'a été importé.
+backupErrorInvalidProjectId: Le projet $1 de cette sauvegarde n'a pas d'identifiant de projet claude.ai valide. Rien n'a été importé.
+backupErrorDuplicateProjectId: Le projet $1 de cette sauvegarde apparaît deux fois. Rien n'a été importé.
+backupErrorInvalidProject: Les dossiers du projet $1 de cette sauvegarde sont invalides. Rien n'a été importé.
+copyFailed: La copie a échoué. Le diagnostic est sélectionné ci-dessous ; copiez-le au clavier.
+sectionDangerTitle: Zone de danger
+deleteAllDescription: Supprime les dossiers de tous les projets et vos paramètres de ce navigateur.
+buttonDeleteAll: Supprimer toutes les données
+deleteAllConfirm: Supprimer tous les dossiers et paramètres ? Cette action est irréversible.
+deleteAllDone: Toutes les données ont été supprimées.
+deleteAllFailed: Les données n'ont pas pu être supprimées. Réessayez.
+footerSource: Code source sur GitHub
+footerNotAffiliated: Non affilié à Anthropic.
+popupVersion: Version $1
+buttonCopyDiagnostic: Copier le diagnostic
+diagnosticCopied: "Diagnostic copié : collez-le dans votre rapport de bug."
+buttonOpenBackupPage: Exporter ou importer…
+backupTabHint: S'ouvre dans un onglet, car Firefox ferme ce menu à l'ouverture d'une boîte de dialogue de fichier.
+backupPageTitle: Sauvegarde Nest for Claude
+backupPageDescription: Exportez vos dossiers dans un fichier, ou restaurez-les depuis un fichier. Le fichier reste sur votre appareil.
