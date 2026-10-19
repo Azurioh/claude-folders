@@ -11,8 +11,6 @@ import {
 import {
   createFolder,
   deleteFolder,
-  fileConversation,
-  openFolder,
   renameConversation,
   renameFolder,
   setFolderAppearance,
@@ -26,7 +24,11 @@ import {
 } from '@/features/folders/ui/conversation-candidates';
 import { deleteFolderPanel } from '@/features/folders/ui/delete-folder.panel';
 import type { FloatingPanels, PanelRender } from '@/features/folders/ui/floating-panel';
-import { FOCUS_KEY_ATTRIBUTE, focusFirstKeyed } from '@/features/folders/ui/focus-key';
+import {
+  FOCUS_KEY_ATTRIBUTE,
+  focusFirstKeyed,
+  folderRowFocusKey,
+} from '@/features/folders/ui/focus-key';
 import {
   type FolderAppearance,
   folderEditorPanel,
@@ -35,16 +37,13 @@ import type { FolderEditingHandlers } from '@/features/folders/ui/folder-tree.vi
 import { NEW_FOLDER_FOCUS_KEY } from '@/features/folders/ui/folders-section.view';
 import type { ProjectFoldersStore } from '@/features/folders/ui/project-folders.store';
 import { textFieldPanel } from '@/features/folders/ui/text-field.panel';
+import { fileInFolder } from '@/features/folders/ui/tree-moves';
 
 /** Where an action happens: a project, and the section it was triggered from. */
 interface ActionScope {
   readonly projectId: ProjectId;
   /** The section root; focus is restored on its controls. */
   readonly section: HTMLElement;
-}
-
-function folderFocusKey(folderId: FolderId): string {
-  return `folder:${folderId}`;
 }
 
 function appearanceFields(appearance: FolderAppearance): { emoji?: string; color?: string } {
@@ -113,7 +112,7 @@ export class FolderActions {
           projectId: scope.projectId,
           operation: (state) => unfileConversation({ state, conversationId }),
         });
-        focusFirstKeyed({ container: scope.section, keys: [folderFocusKey(folderId)] });
+        focusFirstKeyed({ container: scope.section, keys: [folderRowFocusKey(folderId)] });
       },
     };
   }
@@ -201,7 +200,7 @@ export class FolderActions {
       scope,
       anchor,
       title: i18n.t('panelEditFolderTitle'),
-      fallbackFocusKeys: [folderFocusKey(folderId)],
+      fallbackFocusKeys: [folderRowFocusKey(folderId)],
       render: folderEditorPanel({
         document: anchor.ownerDocument,
         folder,
@@ -232,7 +231,7 @@ export class FolderActions {
     if (folder === null) {
       return;
     }
-    const parentKeys = folder.parentId === null ? [] : [folderFocusKey(folder.parentId)];
+    const parentKeys = folder.parentId === null ? [] : [folderRowFocusKey(folder.parentId)];
     this.open({
       scope,
       anchor,
@@ -265,7 +264,7 @@ export class FolderActions {
       scope,
       anchor,
       title: i18n.t('panelRenameConversationTitle'),
-      fallbackFocusKeys: [folderFocusKey(conversation.folderId)],
+      fallbackFocusKeys: [folderRowFocusKey(conversation.folderId)],
       render: textFieldPanel({
         document: anchor.ownerDocument,
         fieldLabel: i18n.t('fieldTitle'),
@@ -291,7 +290,7 @@ export class FolderActions {
       scope,
       anchor,
       title: i18n.t('panelAddConversationsTitle', [folder.name]),
-      fallbackFocusKeys: [folderFocusKey(folderId)],
+      fallbackFocusKeys: [folderRowFocusKey(folderId)],
       render: conversationAdderPanel({
         document: anchor.ownerDocument,
         candidates: () => this.candidatesOf(scope.projectId),
@@ -315,16 +314,14 @@ export class FolderActions {
     const { scope, folderId, candidate } = params;
     this.store.apply({
       projectId: scope.projectId,
-      operation: (current) => {
-        const filed = fileConversation({
+      operation: (current) =>
+        fileInFolder({
           state: current,
           conversationId: candidate.conversationId,
           folderId,
           title: candidate.title,
           fallbackTitle: candidate.title,
-        });
-        return filed.ok ? openFolder({ state: filed.state, folderId }) : filed;
-      },
+        }),
     });
   }
 }

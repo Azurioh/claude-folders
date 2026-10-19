@@ -38,6 +38,7 @@ export default defineContentScript({
       hideFiled: new BrowserHideFiledSetting(),
       panelLayer: panelLayer.uiContainer,
       folderIds: new RandomUuidFolderIdProvider(),
+      now: () => Date.now(),
     });
     ctx.addEventListener(window, 'wxt:locationchange', () => {
       ui.sync();

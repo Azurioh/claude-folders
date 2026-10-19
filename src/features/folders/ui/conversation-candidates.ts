@@ -43,3 +43,21 @@ export function unfiledCandidates(params: {
   }
   return [...candidates.values()];
 }
+
+/**
+ * Tells whether claude.ai shows a conversation in some native lists, and with which title: the
+ * test of a native conversation belonging to the project those lists are next to.
+ * @param params.lists - The native conversation lists next to the project's folders sections.
+ * @param params.conversationId - The conversation to look for.
+ * @returns Its clean title (possibly empty), or `null` when no list shows it.
+ */
+export function listedConversationTitle(params: {
+  lists: readonly ParentNode[];
+  conversationId: ConversationId;
+}): string | null {
+  const { lists, conversationId } = params;
+  const link = lists
+    .flatMap((list) => nativeChatLinks(list))
+    .find((candidate) => chatIdOf(candidate) === conversationId);
+  return link === undefined ? null : conversationTitle(link);
+}

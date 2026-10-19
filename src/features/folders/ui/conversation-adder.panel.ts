@@ -3,7 +3,11 @@ import type { ConversationCandidate } from '@/features/folders/ui/conversation-c
 import { createElement } from '@/features/folders/ui/element';
 import type { PanelContent, PanelRender } from '@/features/folders/ui/floating-panel';
 import { createIcon } from '@/features/folders/ui/icons';
-import { createPanelHint, createTextInput } from '@/features/folders/ui/panel-controls';
+import {
+  createFilterField,
+  createPanelHint,
+  filterQueryOf,
+} from '@/features/folders/ui/panel-controls';
 
 const FILTER_FIELD_ID = 'nfc-adder-filter';
 const ITEM_ICON_SIZE = 14;
@@ -33,10 +37,11 @@ class ConversationAdder {
     this.document = document;
     this.candidates = params.candidates;
     this.onFile = params.onFile;
-    this.filter = createTextInput({ document, id: FILTER_FIELD_ID, value: '', className: '' });
-    this.filter.type = 'search';
-    this.filter.placeholder = i18n.t('filterPlaceholder');
-    this.filter.setAttribute('aria-label', i18n.t('fieldFilter'));
+    this.filter = createFilterField({
+      document,
+      id: FILTER_FIELD_ID,
+      label: i18n.t('fieldFilter'),
+    });
     this.filter.addEventListener('input', () => {
       this.fill();
     });
@@ -63,7 +68,7 @@ class ConversationAdder {
   }
 
   private fill(): void {
-    const query = this.filter.value.trim().toLocaleLowerCase();
+    const query = filterQueryOf(this.filter);
     const shown = this.candidates().filter((candidate) => matches({ candidate, query }));
     this.list.replaceChildren(...shown.map((candidate) => this.item(candidate)));
     this.list.hidden = shown.length === 0;

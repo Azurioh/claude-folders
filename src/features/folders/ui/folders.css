@@ -309,6 +309,21 @@ button.nfc-row {
   }
 }
 
+/* Drag and drop. While a drag the section accepts is in progress, its header (the drop target of
+   the top level) gets a dashed outline; the target under the pointer, while it accepts the drag,
+   gets a tinted background and an inset border, so the state is not shown by color alone. */
+.nfc-section[data-nfc-dragging] [data-nfc-drop=""] {
+  outline: 1px dashed color-mix(in srgb, currentColor 35%, transparent);
+  outline-offset: -1px;
+  border-radius: 8px;
+}
+
+.nfc-over {
+  /* biome-ignore lint/complexity/noImportantStyles: must win over the hover and folder color backgrounds of the row. */
+  background: color-mix(in srgb, #d97757 16%, transparent) !important;
+  box-shadow: inset 0 0 0 1px #d97757;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nfc-row,
   .nfc-chev {

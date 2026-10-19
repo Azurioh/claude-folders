@@ -45,3 +45,11 @@ deleteFolderConfirm: "Delete “$1”? Its content moves up one level."
 renameConversationHint: Only the title shown in your folders changes.
 adderEmpty: No conversation available
 adderHint: Lists unfiled conversations shown in the page or sidebar.
+actionMove: "Move “$1” to…"
+panelMoveTitle: "Move “$1”"
+fieldFilterFolders: Filter folders
+moveDestinationRoot: Top level
+moveDestinationNoFolder: No folder
+moveCurrentLocation: Current
+moveEmpty: No matching folder
+conversationUntitled: Untitled

@@ -182,3 +182,37 @@ export class SequentialFolderIdProvider implements FolderIdProvider {
     return `folder-${this.count}`;
   }
 }
+
+/**
+ * Fires a drag and drop event, as the browser would. happy-dom has no `DragEvent` (its
+ * `window.DragEvent` is plain `Event`), so the event is an `Event` carrying the given
+ * `dataTransfer`, which happy-dom does implement.
+ * @param params.target - The element under the pointer.
+ * @param params.type - `dragstart`, `dragenter`, `dragover`, `drop` or `dragend`.
+ * @param params.transfer - The drag data, shared by every event of one drag.
+ * @returns The dispatched event, to check `defaultPrevented`.
+ */
+export function fireDrag(params: { target: Element; type: string; transfer: DataTransfer }): Event {
+  const event = new Event(params.type, { bubbles: true, cancelable: true, composed: true });
+  Object.defineProperty(event, 'dataTransfer', { value: params.transfer });
+  params.target.dispatchEvent(event);
+  return event;
+}
+
+/** A clock whose time only moves when told to. */
+export class ManualClock {
+  private time = 0;
+
+  /** @returns The current time, in milliseconds. */
+  now(): number {
+    return this.time;
+  }
+
+  /**
+   * Moves the time forward.
+   * @param ms - How many milliseconds pass.
+   */
+  advance(ms: number): void {
+    this.time += ms;
+  }
+}

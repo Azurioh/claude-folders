@@ -51,3 +51,21 @@ export function focusFirstKeyed(params: { container: Element; keys: readonly str
     }
   }
 }
+
+/**
+ * Focus key of a folder row.
+ * @param folderId - The folder.
+ * @returns The key.
+ */
+export function folderRowFocusKey(folderId: string): string {
+  return `folder:${folderId}`;
+}
+
+/**
+ * Focus key of a conversation row.
+ * @param conversationId - The conversation.
+ * @returns The key.
+ */
+export function conversationRowFocusKey(conversationId: string): string {
+  return `conversation:${conversationId}`;
+}

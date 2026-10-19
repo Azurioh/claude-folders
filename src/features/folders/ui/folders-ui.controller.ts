@@ -6,10 +6,13 @@ import type { BrowserHideFiledSetting } from '@/features/folders/storage/browser
 import { clearFiledMarks, markFiled } from '@/features/folders/ui/filed-marks';
 import { FloatingPanels } from '@/features/folders/ui/floating-panel';
 import { FolderActions } from '@/features/folders/ui/folder-actions';
+import { FolderDragDrop } from '@/features/folders/ui/folder-drag-drop';
 import {
   type FoldersSectionHandlers,
   renderFoldersSection,
 } from '@/features/folders/ui/folders-section.view';
+import { MoveActions } from '@/features/folders/ui/move-actions';
+import { NativeDraggables } from '@/features/folders/ui/native-draggables';
 import { copyNativeRowLook } from '@/features/folders/ui/native-row-look';
 import { ProjectFoldersStore } from '@/features/folders/ui/project-folders.store';
 import { openThroughNativeLink } from '@/features/folders/ui/spa-navigation';
@@ -51,7 +54,10 @@ interface Mount {
 export interface FoldersUi {
   /** Mounts, updates and removes the sections to match the page; safe to call at any time. */
   sync(): void;
-  /** Closes the open panel, removes every section and mark and stops observing the page and storage. */
+  /**
+   * Closes the open panel, removes every section and mark, restores the native links made
+   * draggable and stops observing the page, the drags and storage.
+   */
   stop(): void;
 }
 
@@ -75,6 +81,9 @@ class FoldersUiController implements FoldersUi {
   private readonly store: ProjectFoldersStore;
   private readonly panels: FloatingPanels;
   private readonly actions: FolderActions;
+  private readonly moves: MoveActions;
+  private readonly dragDrop: FolderDragDrop;
+  private readonly nativeDraggables = new NativeDraggables();
   private readonly mounts = new Map<string, Mount>();
   private readonly observer: MutationObserver;
   private readonly unwatchHideFiled: () => void;
@@ -89,6 +98,7 @@ class FoldersUiController implements FoldersUi {
     hideFiled: HideFiledSource;
     panelLayer: HTMLElement;
     folderIds: FolderIdProvider;
+    now: () => number;
   }) {
     this.document = params.document;
     this.pathname = params.pathname;
@@ -103,6 +113,18 @@ class FoldersUiController implements FoldersUi {
       store: this.store,
       panels: this.panels,
       folderIds: params.folderIds,
+      listsOf: (projectId) => this.listsOf(projectId),
+    });
+    this.moves = new MoveActions({ store: this.store, panels: this.panels });
+    this.dragDrop = new FolderDragDrop({
+      window: this.document.defaultView ?? window,
+      store: this.store,
+      now: params.now,
+      sections: () =>
+        [...this.mounts.values()].map((mount) => ({
+          projectId: mount.projectId,
+          element: mount.element,
+        })),
       listsOf: (projectId) => this.listsOf(projectId),
     });
     this.observer = new MutationObserver(() => {
@@ -143,12 +165,14 @@ class FoldersUiController implements FoldersUi {
   stop(): void {
     this.stopped = true;
     this.panels.close();
+    this.dragDrop.stop();
     this.observer.disconnect();
     clearTimeout(this.syncTimer);
     this.store.dispose();
     this.unwatchHideFiled();
     this.removeMountsExcept(new Set());
     clearFiledMarks(this.document);
+    this.nativeDraggables.restoreAll();
   }
 
   private scheduleSync(): void {
@@ -253,6 +277,7 @@ class FoldersUiController implements FoldersUi {
     const { projectId } = params;
     return {
       ...this.actions.handlersFor(params),
+      ...this.moves.handlersFor(params),
       onToggleFolder: (folderId) => {
         this.store.apply({
           projectId,
@@ -300,6 +325,7 @@ class FoldersUiController implements FoldersUi {
       });
       mount.rendered = inputs;
     }
+    this.nativeDraggables.enable(mount.list);
     if (!mount.lookCopied) {
       mount.lookCopied = copyNativeRowLook({ section: mount.element, list: mount.list });
     }
@@ -313,7 +339,8 @@ class FoldersUiController implements FoldersUi {
  * Starts the folders UI of a claude.ai tab: a folders section is mounted in every expanded
  * sidebar project and on the project page, filed conversations are hidden (or dimmed) in the
  * native lists next to them, and everything follows DOM mutations (debounced), storage changes
- * from any tab and calls to `sync` (e.g. on SPA navigation).
+ * from any tab and calls to `sync` (e.g. on SPA navigation). Folders and conversations are moved
+ * by drag and drop (including claude.ai's own conversation links) or with the "Move to…" panel.
  * @param params.document - The claude.ai document.
  * @param params.pathname - Reads the current `location.pathname`.
  * @param params.repository - Where folder trees are read, watched and saved.
@@ -321,6 +348,7 @@ class FoldersUiController implements FoldersUi {
  * @param params.panelLayer - Where floating panels are rendered: a container inside a shadow root,
  *   so claude.ai's styles and the panels' do not collide.
  * @param params.folderIds - Generates the ids of new folders.
+ * @param params.now - Reads the current time in milliseconds; dates what a drag remembers.
  * @returns The running UI; call `stop` when the content script is invalidated.
  */
 export function startFoldersUi(params: {
@@ -330,6 +358,7 @@ export function startFoldersUi(params: {
   hideFiled: HideFiledSource;
   panelLayer: HTMLElement;
   folderIds: FolderIdProvider;
+  now: () => number;
 }): FoldersUi {
   const ui = new FoldersUiController(params);
   ui.sync();

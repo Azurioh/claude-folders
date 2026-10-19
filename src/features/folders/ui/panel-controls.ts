@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { createElement } from '@/features/folders/ui/element';
 
 const ENTER_KEY = 'Enter';
@@ -28,6 +29,36 @@ export function createTextInput(params: {
   });
   input.value = value;
   return input;
+}
+
+/**
+ * Builds the search field filtering the list of a picker panel; its label is only announced, the
+ * placeholder says what it does.
+ * @param params.document - The owner document.
+ * @param params.id - The input id; unique within the open panel.
+ * @param params.label - The accessible name, e.g. "Filter conversations".
+ * @returns The input.
+ */
+export function createFilterField(params: {
+  document: Document;
+  id: string;
+  label: string;
+}): HTMLInputElement {
+  const { document, id, label } = params;
+  const input = createTextInput({ document, id, value: '', className: '' });
+  input.type = 'search';
+  input.placeholder = i18n.t('filterPlaceholder');
+  input.setAttribute('aria-label', label);
+  return input;
+}
+
+/**
+ * Reads the query typed in a filter field, ready to match lowercased text.
+ * @param input - The filter field.
+ * @returns The trimmed, lowercased query.
+ */
+export function filterQueryOf(input: HTMLInputElement): string {
+  return input.value.trim().toLocaleLowerCase();
 }
 
 /**

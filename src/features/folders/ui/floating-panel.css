@@ -231,6 +231,17 @@
   color: #d97757;
 }
 
+.nfc-move-item[aria-current] {
+  font-weight: 600;
+}
+
+.nfc-move-current {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
 .nfc-panel-buttons {
   display: flex;
   justify-content: flex-end;

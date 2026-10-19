@@ -100,6 +100,7 @@ describe('folder actions', () => {
       hideFiled: new InMemoryHideFiledSetting(true),
       panelLayer: layer,
       folderIds: new SequentialFolderIdProvider(),
+      now: () => 0,
     });
     await flushPromises();
   }
