@@ -161,8 +161,9 @@ needed by the rules above; tests use them to scope assertions.
 
 `entrypoints/claude.content.ts` is the composition root: it builds `BrowserFoldersRepository`,
 `BrowserHideFiledSetting` and `RandomUuidFolderIdProvider`, mounts the panel layer (below),
-starts the UI with `startFoldersUi`, calls `sync()` on WXT's `wxt:locationchange` (claude.ai
-navigates client-side) and `stop()` on `ctx.onInvalidated`. The section CSS (`ui/folders.css`) is
+starts the UI with `startFoldersUi` (with `Date.now` as its clock, which dates remembered drags),
+calls `sync()` on WXT's `wxt:locationchange` (claude.ai navigates client-side) and `stop()` on
+`ctx.onInvalidated`. The section CSS (`ui/folders.css`) is
 imported there, so WXT injects it into the page through the manifest; the panel CSS
 (`ui/floating-panel.css`) is imported with `?inline` and injected only inside the panel layer's
 shadow root.
@@ -186,8 +187,8 @@ shadow root.
   observer from reacting to our own DOM writes; keyboard focus is restored across re-renders.
 - **Row actions** (`row-actions.ts`): each row is wrapped in an `.nfc-item` with its action
   buttons as siblings (a row is a button or a link, which cannot hold buttons). Folder rows offer
-  new sub-folder, add conversations, edit and delete; conversation rows rename (the title shown in
-  the folder only) and remove from folder; the sidebar header has a "New folder" icon button and
+  new sub-folder, add conversations, move to, edit and delete; conversation rows move to, rename
+  (the title shown in the folder only) and remove from folder; the sidebar header has a "New folder" icon button and
   the project page header a "New folder" text button. Actions are shown on row `:hover` and
   `:focus-within` (they stay focusable while transparent) and always under `@media (hover: none)`;
   the count hides while they show. Each has an i18n accessible name and a 44px target on coarse
@@ -208,8 +209,40 @@ shadow root.
   folder after a delete); a pointer press outside closes it and leaves focus where the user
   pressed. Panels: create folder and rename conversation (`text-field.panel.ts`), folder editor
   with live name, emoji field and grid, palette with `aria-pressed` (`folder-editor.panel.ts`),
-  delete confirmation with Cancel focused (`delete-folder.panel.ts`), and the conversation adder
-  (`conversation-adder.panel.ts`).
+  delete confirmation with Cancel focused (`delete-folder.panel.ts`), the conversation adder
+  (`conversation-adder.panel.ts`) and the move panel (`move-destination.panel.ts`).
+- **Drag and drop** (`folder-drag-drop.ts`): sources are our folder and conversation rows and
+  claude.ai's conversation links; targets are folder rows (move or file into that folder) and the
+  section headers (a folder goes to the top level, a conversation leaves its folder). The views
+  only mark sources and targets with `data-nfc-drag-*` / `data-nfc-drop` attributes
+  (`drag-markers.ts`). Every handler (`dragstart`, `dragenter`, `dragover`, `drop`, `dragend`) is
+  registered once on the window in the **capture phase**: claude.ai's own drag handlers would
+  otherwise swallow the events, and the dragged native conversation has to be read at `dragstart`,
+  before claude.ai touches `dataTransfer`. What is dragged is remembered there for at most 60 s
+  (in case `dragend` never comes), because drag data cannot be read before `drop`: `dragover`
+  calls `preventDefault` only when the target accepts the payload, so a refused drop shows the
+  "not allowed" cursor. On `drop` the drag data wins when readable (our rows carry
+  `application/x-nfc-folder` / `application/x-nfc-conversation` with their project and id, which
+  Firefox also needs to start the drag; a native link carries its URL), the remembered drag being
+  the fallback. Rules (`drop-operation.ts`): our rows only move within their own project; a
+  folder dropped into itself or a descendant is refused by the domain (`invalid-move`), never
+  thrown. **Project membership**: a native conversation is accepted only when it belongs to the
+  target's project, i.e. it is shown in the native lists where that project's sections are
+  mounted (as for the adder) or already filed in it; the legacy script filed a conversation of
+  another project dropped here, which mixed projects. It is titled from its native row
+  (`conversationTitle`), unless already filed (its title is kept). Moves reveal the destination
+  (it and its ancestors open, `tree-moves.ts`). Feedback: sections that accept the current drag
+  get `data-nfc-dragging` (dashed outline on their header) and the hovered accepting target the
+  `nfc-over` class (tint and inset border, no animation), both cleared on `drop`, `dragend` and
+  `stop()`. Native conversation links of the mounted lists are made draggable (claude.ai sets
+  `draggable="false"`) by `native-draggables.ts`, which restores the original attribute.
+- **Move panel** (`move-actions.ts`, `move-destinations.ts`): the keyboard and single-pointer
+  alternative to dragging (WCAG 2.5.7). "Move to…" on a folder or a filed conversation opens a
+  panel listing the valid destinations, filterable like the adder: the top level ("No folder" for
+  a conversation, which unfiles it) and every folder in tree order labelled with its path, minus
+  the folder itself and its descendants; the current location is marked with text, an icon and
+  `aria-current`. Choosing one applies the same moves as a drop and gives focus back to the moved
+  row (the former folder when a conversation is unfiled); Escape gives it back to the button.
 - **Adder candidates** (`conversation-candidates.ts`): the conversations claude.ai shows in the
   native lists where the project's sections are mounted (sidebar project list, project page
   Recents), not yet filed in the project, deduplicated, titled with `conversationTitle`. This is
@@ -219,9 +252,10 @@ shadow root.
 - `native-row-look.ts` copies the native row look into `--nfc-*` custom properties; it reads
   layout, so it is the only UI code that needs a rendered page and does nothing in test DOMs.
 
-`stop()` closes the open panel, disconnects the observer, cancels the pending sync, ends every
-storage watch and removes the sections and every attribute set on claude.ai's nodes; WXT removes
-the panel layer when the context is invalidated.
+`stop()` closes the open panel, removes the drag listeners and feedback, disconnects the
+observer, cancels the pending sync, ends every storage watch, removes the sections and every
+attribute set on claude.ai's nodes and restores the native links' `draggable`; WXT removes the
+panel layer when the context is invalidated.
 
 ## Rendering rules
 
