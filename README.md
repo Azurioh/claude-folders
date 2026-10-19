@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/brand/icon-512.png" width="128" height="128" alt="Nest for Claude logo: folders in a bird's nest">
+</p>
+
 # Nest for Claude
 
 > Nested folders for your claude.ai conversations — organized per project, stored only in your browser.
