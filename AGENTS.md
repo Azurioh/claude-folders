@@ -18,7 +18,8 @@ Details: `docs/ARCHITECTURE.md`, `CONTRIBUTING.md`.
 - `src/features/folders/domain/`: pure TypeScript. Imports nothing from `storage`, `ui`,
   `shared/claude-dom`, WXT, `browser` or the DOM.
 - `src/features/folders/storage/`: repository over `browser.storage.local`; versioned schema,
-  pure migration functions.
+  pure migration functions. Every storage read is validated; invalid data reads as the default
+  value and is never written back.
 - `src/features/folders/ui/`: rendering only.
 - `src/shared/claude-dom/`: the ONLY code that knows claude.ai's DOM (selectors, detection, title
   extraction). DOM breakages are fixed here and nowhere else.
