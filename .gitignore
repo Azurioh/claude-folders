@@ -24,3 +24,6 @@ coverage/
 
 # Local tool artifacts
 .claude-flow/
+
+# Claude Code agent worktrees
+.claude/worktrees/

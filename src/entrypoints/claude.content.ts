@@ -5,6 +5,8 @@ import { BrowserFoldersRepository } from '@/features/folders/storage/browser-fol
 import { BrowserHideFiledSetting } from '@/features/folders/storage/browser-hide-filed.setting';
 import panelCss from '@/features/folders/ui/floating-panel.css?inline';
 import { startFoldersUi } from '@/features/folders/ui/folders-ui.controller';
+import { diagnose } from '@/shared/claude-dom/diagnostic';
+import { answerPageDiagnosticRequests } from '@/shared/page-diagnostic/page-diagnostic.responder';
 
 /** Tag of the element hosting the shadow root the floating panels render in. */
 const PANEL_LAYER_NAME = 'nfc-panels';
@@ -15,7 +17,8 @@ const PANEL_LAYER_NAME = 'nfc-panels';
  * It wires the browser storage adapters and the folder id provider into the UI, mounts the
  * shadow root hosting the floating panels (WXT's `createShadowRootUi`, with the panel styles
  * injected inside it and keyboard events kept from reaching claude.ai), re-syncs the UI on
- * claude.ai's client-side navigation (`wxt:locationchange`) and removes everything it added once
+ * claude.ai's client-side navigation (`wxt:locationchange`), answers the options page's
+ * diagnostic requests with what the detection sees (counts only) and removes everything it added once
  * the extension context is invalidated (update, reload or uninstall).
  */
 export default defineContentScript({
@@ -40,10 +43,14 @@ export default defineContentScript({
       folderIds: new RandomUuidFolderIdProvider(),
       now: () => Date.now(),
     });
+    const stopDiagnostic = answerPageDiagnosticRequests(() =>
+      diagnose({ root: document, pathname: location.pathname }),
+    );
     ctx.addEventListener(window, 'wxt:locationchange', () => {
       ui.sync();
     });
     ctx.onInvalidated(() => {
+      stopDiagnostic();
       ui.stop();
     });
   },

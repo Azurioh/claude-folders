@@ -47,4 +47,25 @@ describe('BrowserHideFiledSetting', () => {
     await fakeBrowser.storage.local.set({ [KEY]: true });
     expect(listener).toHaveBeenCalledTimes(1);
   });
+
+  it('removes the value and its metadata, then reads the default again', async () => {
+    await setting.save(false);
+
+    await setting.remove();
+
+    expect(await fakeBrowser.storage.local.get(null)).toEqual({});
+    expect(await setting.load()).toBe(true);
+  });
+
+  it('records the schema version again when saved after a removal', async () => {
+    await setting.save(false);
+    await setting.remove();
+
+    await setting.save(true);
+
+    expect(await fakeBrowser.storage.local.get(null)).toEqual({
+      [KEY]: true,
+      [`${KEY}$`]: { v: 1 },
+    });
+  });
 });

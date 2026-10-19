@@ -216,4 +216,27 @@ describe('BrowserFoldersRepository', () => {
     expect(loaded.folders.constructor).toEqual(state.folders.constructor);
     expect(Object.keys(loaded.conversations)).toEqual(['__proto__']);
   });
+
+  it('lists the stored projects, skipping keys it never writes', async () => {
+    await repository.save({ projectId: PROJECT_A, state: sampleProject() });
+    await fakeBrowser.storage.local.set({
+      [`projects:${PROJECT_B}`]: 'garbage',
+      [`projects:${PROJECT_A.toUpperCase()}`]: sampleProject(),
+      'projects:abc': sampleProject(),
+      'settings:hideFiled': true,
+    });
+
+    expect((await repository.listProjectIds()).sort()).toEqual([PROJECT_A, PROJECT_B].sort());
+  });
+
+  it('removes a project and its metadata', async () => {
+    await repository.save({ projectId: PROJECT_A, state: sampleProject() });
+    await repository.save({ projectId: PROJECT_B, state: sampleProject() });
+
+    await repository.remove(PROJECT_A.toUpperCase());
+
+    expect(await readRaw(`projects:${PROJECT_A}`)).toBeUndefined();
+    expect(await readRaw(`projects:${PROJECT_A}$`)).toBeUndefined();
+    expect(await repository.load(PROJECT_B)).toEqual(sampleProject());
+  });
 });

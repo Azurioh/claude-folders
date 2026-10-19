@@ -1,0 +1,422 @@
+/*
+ * Toolbar popup and backup page. Calm warm neutrals that sit well next to claude.ai, light and
+ * dark following the system (`prefers-color-scheme`). Every control is at least 44px tall.
+ */
+
+:root {
+  color-scheme: light dark;
+  --nfc-bg: #faf9f5;
+  --nfc-surface: #ffffff;
+  --nfc-surface-sunken: #f3f1ea;
+  --nfc-text: #1f1e1d;
+  --nfc-text-muted: #5e5c56;
+  --nfc-border: #e3e1d8;
+  --nfc-border-strong: #c9c6bb;
+  --nfc-accent: #a9492c;
+  --nfc-accent-hover: #933d23;
+  --nfc-on-accent: #ffffff;
+  --nfc-danger: #b42318;
+  --nfc-danger-hover: #9a1d13;
+  --nfc-on-danger: #ffffff;
+  --nfc-danger-border: #f0c4bd;
+  --nfc-error-text: #b42318;
+  --nfc-focus: #a9492c;
+  --nfc-switch-off: #8d8a80;
+  --nfc-switch-thumb: #ffffff;
+  --nfc-radius: 12px;
+  --nfc-radius-control: 8px;
+  --nfc-control-height: 44px;
+  --nfc-transition: 150ms ease-out;
+  --nfc-font:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --nfc-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --nfc-bg: #262624;
+    --nfc-surface: #30302e;
+    --nfc-surface-sunken: #262624;
+    --nfc-text: #f0eee6;
+    --nfc-text-muted: #b4b2a8;
+    --nfc-border: #45443f;
+    --nfc-border-strong: #63615a;
+    --nfc-accent: #d97757;
+    --nfc-accent-hover: #e48a6c;
+    --nfc-on-accent: #1a1918;
+    --nfc-danger: #f2786b;
+    --nfc-danger-hover: #f6948a;
+    --nfc-on-danger: #1a1918;
+    --nfc-danger-border: #7a2e26;
+    --nfc-error-text: #ff9b8f;
+    --nfc-focus: #e48a6c;
+    --nfc-switch-off: #7d7b73;
+    --nfc-switch-thumb: #f0eee6;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--nfc-bg);
+  color: var(--nfc-text);
+  font-family: var(--nfc-font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+.nfc-popup-body {
+  width: 340px;
+}
+
+.nfc-popup {
+  max-height: 580px;
+  overflow-y: auto;
+  padding: 16px;
+  overscroll-behavior: contain;
+}
+
+.nfc-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.nfc-header {
+  margin-bottom: 12px;
+}
+
+.nfc-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.nfc-page .nfc-title {
+  font-size: 1.5rem;
+}
+
+.nfc-subtitle {
+  margin: 2px 0 0;
+  color: var(--nfc-text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.nfc-page .nfc-subtitle {
+  font-size: 0.9375rem;
+}
+
+.nfc-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nfc-main:focus {
+  outline: none;
+}
+
+.nfc-card {
+  padding: 16px;
+  background: var(--nfc-surface);
+  border: 1px solid var(--nfc-border);
+  border-radius: var(--nfc-radius);
+}
+
+.nfc-card-danger {
+  border-color: var(--nfc-danger-border);
+}
+
+.nfc-popup .nfc-card {
+  padding: 12px;
+}
+
+.nfc-section-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.nfc-card-danger .nfc-section-title {
+  color: var(--nfc-error-text);
+}
+
+.nfc-muted {
+  margin: 0 0 12px;
+  color: var(--nfc-text-muted);
+  font-size: 0.875rem;
+}
+
+.nfc-summary {
+  margin: 0 0 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Display switch */
+
+.nfc-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: var(--nfc-control-height);
+}
+
+.nfc-switch-text .nfc-muted {
+  margin: 0;
+}
+
+.nfc-switch-label {
+  display: block;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.nfc-switch {
+  flex: none;
+  width: 52px;
+  height: 32px;
+  margin: 6px 0;
+  appearance: none;
+  border-radius: 999px;
+  background-color: var(--nfc-switch-off);
+  background-image: radial-gradient(circle, var(--nfc-switch-thumb) 0 11px, transparent 12px);
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 32px 32px;
+  cursor: pointer;
+  transition:
+    background-color var(--nfc-transition),
+    background-position var(--nfc-transition);
+}
+
+.nfc-switch:checked {
+  background-color: var(--nfc-accent);
+  background-position: right center;
+}
+
+.nfc-switch:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+/* Buttons */
+
+.nfc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nfc-button {
+  min-height: var(--nfc-control-height);
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--nfc-radius-control);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color var(--nfc-transition),
+    border-color var(--nfc-transition);
+}
+
+.nfc-button:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.nfc-button-primary {
+  background: var(--nfc-accent);
+  color: var(--nfc-on-accent);
+}
+
+.nfc-button-primary:hover:not(:disabled) {
+  background: var(--nfc-accent-hover);
+}
+
+.nfc-button-secondary {
+  background: var(--nfc-surface);
+  border-color: var(--nfc-border-strong);
+  color: var(--nfc-text);
+}
+
+.nfc-button-secondary:hover:not(:disabled) {
+  background: var(--nfc-surface-sunken);
+}
+
+.nfc-button-danger {
+  background: var(--nfc-danger);
+  color: var(--nfc-on-danger);
+}
+
+.nfc-button-danger:hover:not(:disabled) {
+  background: var(--nfc-danger-hover);
+}
+
+.nfc-button:focus-visible,
+.nfc-switch:focus-visible,
+.nfc-diagnostic:focus-visible,
+.nfc-link:focus-visible {
+  outline: 2px solid var(--nfc-focus);
+  outline-offset: 2px;
+}
+
+/* Backup */
+
+.nfc-drop-zone {
+  padding: 16px;
+  border: 2px dashed var(--nfc-border-strong);
+  border-radius: var(--nfc-radius);
+  transition:
+    border-color var(--nfc-transition),
+    background-color var(--nfc-transition);
+}
+
+.nfc-drop-zone .nfc-muted {
+  margin: 12px 0 0;
+}
+
+.nfc-drop-zone-over {
+  border-color: var(--nfc-accent);
+  background: var(--nfc-surface-sunken);
+}
+
+.nfc-import-area:not(:empty) {
+  margin-top: 12px;
+}
+
+.nfc-confirmation {
+  padding: 16px;
+  background: var(--nfc-surface-sunken);
+  border: 1px solid var(--nfc-border);
+  border-radius: var(--nfc-radius);
+}
+
+.nfc-confirmation .nfc-muted {
+  margin-bottom: 8px;
+}
+
+.nfc-confirmation-question {
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+.nfc-error {
+  margin: 0;
+  color: var(--nfc-error-text);
+  font-weight: 500;
+}
+
+.nfc-status {
+  margin: 12px 0 0;
+  font-size: 0.9375rem;
+}
+
+.nfc-status:empty {
+  display: none;
+}
+
+.nfc-status[data-tone="error"] {
+  color: var(--nfc-error-text);
+  font-weight: 500;
+}
+
+/* Diagnostic */
+
+.nfc-diagnostic {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: var(--nfc-surface-sunken);
+  border: 1px solid var(--nfc-border);
+  border-radius: var(--nfc-radius-control);
+  color: var(--nfc-text);
+  font-family: var(--nfc-font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* Footer */
+
+.nfc-footer {
+  margin-top: 12px;
+}
+
+.nfc-diagnostic-copy .nfc-button {
+  width: 100%;
+}
+
+.nfc-diagnostic-copy .nfc-diagnostic {
+  margin: 8px 0 0;
+}
+
+.nfc-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 8px;
+  margin-top: 4px;
+}
+
+.nfc-fineprint {
+  margin: 0;
+  color: var(--nfc-text-muted);
+  font-size: 0.75rem;
+}
+
+.nfc-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--nfc-control-height);
+  margin-left: -8px;
+  padding: 0 8px;
+  border-radius: var(--nfc-radius-control);
+  color: var(--nfc-accent);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-underline-offset: 3px;
+}
+
+.nfc-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 768px) {
+  .nfc-page {
+    padding: 48px 24px 56px;
+  }
+
+  .nfc-page .nfc-card {
+    padding: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --nfc-transition: 0ms;
+  }
+}

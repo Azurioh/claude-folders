@@ -8,11 +8,13 @@ import type {
 } from '@/features/folders/domain/folders.repository';
 import { InvalidProjectIdError } from '@/features/folders/storage/invalid-project-id.error';
 import { warnInvalidStoredValue } from '@/features/folders/storage/invalid-stored-value.warning';
+import { normalizeProjectId } from '@/features/folders/storage/project-id';
 import { parseStoredProject } from '@/features/folders/storage/stored-project.parser';
 
-const PROJECT_KEY_PREFIX = 'local:projects:';
+const STORAGE_AREA = 'local';
+const PROJECT_KEY = 'projects:';
+const PROJECT_KEY_PREFIX = `${STORAGE_AREA}:${PROJECT_KEY}`;
 const PROJECT_SCHEMA_VERSION = 1;
-const PROJECT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /**
  * Builds the storage item of one project. Each project has its own key, so tabs writing different
@@ -20,8 +22,8 @@ const PROJECT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
  * the key of its lowercase form. Schema changes bump the version and add a migration here.
  */
 function projectItem(projectId: ProjectId) {
-  const normalizedId = projectId.toLowerCase();
-  if (!PROJECT_ID_PATTERN.test(normalizedId)) {
+  const normalizedId = normalizeProjectId(projectId);
+  if (normalizedId === null) {
     throw new InvalidProjectIdError();
   }
   return storage.defineItem<ProjectFolders>(`${PROJECT_KEY_PREFIX}${normalizedId}`, {
@@ -75,5 +77,27 @@ export class BrowserFoldersRepository implements FoldersRepository {
     return item.watch((raw: unknown) => {
       params.listener(toProjectFolders({ key: item.key, raw }));
     });
+  }
+
+  /**
+   * Lists the projects that have a stored folder tree, valid or not.
+   * @returns The ids of the stored projects. Keys this repository never writes (not a lowercase
+   * UUID, metadata) are skipped.
+   */
+  async listProjectIds(): Promise<ProjectId[]> {
+    const stored = await storage.snapshot(STORAGE_AREA);
+    return Object.keys(stored)
+      .filter((key) => key.startsWith(PROJECT_KEY))
+      .map((key) => key.slice(PROJECT_KEY.length))
+      .filter((projectId) => normalizeProjectId(projectId) === projectId);
+  }
+
+  /**
+   * Deletes the stored folder tree of a project and its schema metadata.
+   * @param projectId - The project to delete.
+   * @throws {InvalidProjectIdError} When `projectId` is not a UUID (as a rejection).
+   */
+  async remove(projectId: ProjectId): Promise<void> {
+    await projectItem(projectId).removeValue({ removeMeta: true });
   }
 }

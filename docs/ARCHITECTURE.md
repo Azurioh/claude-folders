@@ -7,16 +7,19 @@ Chrome and Firefox with Manifest V3 from a single code base.
 
 ```
 src/
-  entrypoints/            # WXT entrypoints (content script, options page)
+  entrypoints/            # WXT entrypoints (content script, action popup, Firefox backup page)
   locales/                # en.yml, fr.yml (@wxt-dev/i18n)
   features/folders/
     domain/               # pure TS: folder tree operations and ports, no DOM, no browser APIs
     storage/              # repository over browser.storage, versioned schema + migrations
     ids/                  # folder id provider (crypto.randomUUID)
-    ui/                   # rendering of folder sections and floating panels
+    backup/               # backup file format: serialization, Zod validation, size-checked reading
+    ui/                   # rendering of folder sections and floating panels on claude.ai
+    popup/                # rendering of the toolbar popup and of the backup page
   shared/
     claude-dom/           # the ONLY code that knows claude.ai's DOM: selectors, sidebar/Recents
                           # detection, title extraction — tested against HTML fixtures
+    page-diagnostic/      # popup <-> content script message for the page diagnostic
 tests/                    # Vitest suites mirroring src/ (e.g. tests/features/folders/domain/)
   fixtures/               # sanitized claude.ai HTML fixtures for shared/claude-dom tests
 ```
@@ -48,13 +51,22 @@ entrypoints  ->  features/folders/ui  ->  features/folders/storage  ->  features
      |                   +----------------> shared/claude-dom                |
      |                   +---------------------------------------------------+
      +-----------> features/folders/ids  ------------------------------------+
+     |
+     +-----------> features/folders/popup -> features/folders/backup -> storage, domain
+     |                   |
+     +-----------> shared/page-diagnostic  ->  shared/claude-dom (types)
 ```
 
 - `domain` imports nothing from `storage`, `ui`, `shared/claude-dom`, WXT or `browser`.
 - `storage` depends on `domain` (types, migrations' target shapes) and on `browser.storage`.
 - `ids` implements the `FolderIdProvider` port of `domain` with `crypto.randomUUID()`; nothing
   else calls `crypto.randomUUID()`. The UI only knows the port, so tests inject a sequential fake.
-- `ui` composes `domain`, `storage` and `shared/claude-dom`; it is the only layer that renders.
+- `ui` composes `domain`, `storage` and `shared/claude-dom`; it renders on claude.ai.
+- `backup` depends on `domain` (snapshot types) and on `storage`'s validators (project parser,
+  project id), so a backup file is checked exactly as stored data is.
+- `popup` renders the toolbar popup and the backup page; it only knows the
+  `FoldersSnapshotStore` port, the setting and injected browser functions (clipboard, download,
+  page diagnostic, opening the backup page).
 - `entrypoints` only wire things together.
 - No cross-feature imports: code used by more than one feature goes to `shared/`.
 - Imports use the `@/` alias (`@/features/folders/domain/...`), never `../../`.
@@ -157,13 +169,92 @@ needed by the rules above; tests use them to scope assertions.
   `console.warn` prefixed with `[nest-for-claude]`, and is left untouched in storage: reads never
   write back. It is replaced only when the user next changes that project.
 
+### Whole-storage snapshot (backup and deletion)
+
+`domain/folders-snapshot.ts` defines `FoldersSnapshot` (every project's tree plus `hideFiled`) and
+`countSnapshot`; `domain/folders-snapshot.store.ts` declares the `FoldersSnapshotStore` port
+(`read`, `replace`, `clear`). `storage/browser-folders-snapshot.store.ts` implements it **through**
+`BrowserFoldersRepository` and `BrowserHideFiledSetting`, never with raw keys from callers:
+
+- `read`: the stored project ids (`BrowserFoldersRepository.listProjectIds`, only exact
+  `projects:<lowercase uuid>` keys), each loaded and validated by the repository (invalid data reads
+  as an empty project), plus the setting.
+- `replace`: saves every project of the snapshot and the setting (so WXT records `{ v: 1 }` in
+  each key's metadata), then removes the stored projects absent from it, value and metadata.
+- `clear`: removes every project and the setting, values and metadata.
+
+The setting's item is defined per operation so that a save after `remove` records the schema
+version again (a WXT item definition records it on its first write only).
+
+## Toolbar popup
+
+There is no options page: settings live in the action popup (`entrypoints/popup/`, WXT's `popup`
+entrypoint, i.e. `action.default_popup`), shown when the toolbar icon is clicked. Its entrypoint is
+the composition root: it wires `BrowserFoldersSnapshotStore`, `BrowserHideFiledSetting`,
+`browser.runtime.getManifest().version`, `navigator.userAgent`, the clipboard, the page diagnostic
+request and the backup mode of the browser into `startPopupMenu` (`features/folders/popup/`).
+The popup is 340px wide and scrolls inside a 580px max height; focus starts on the menu (`main`,
+`tabindex="-1"`), so the first Tab reaches the first control. Sections:
+
+- **Display**: an `input type="checkbox" role="switch"` bound to `settings:hideFiled` (on: hidden,
+  off: dimmed), watching it so changes from other tabs show up.
+- **Backup**: the stored counts; **Export** downloads `nest-for-claude-backup-YYYY-MM-DD.json`
+  (`{ format: 'nest-for-claude-backup', version: 1, exportedAt, projects, settings: { hideFiled } }`,
+  `backup/backup-file.ts`) through a temporary object URL and a `download` link; **Import** (file
+  picker) checks the size (`BACKUP_MAX_BYTES`, 5 MB) before reading, parses the text as `unknown`
+  and validates all of it (`backup/backup-file.parser.ts`: format, version, ISO date, settings,
+  every project with the stored-project parser, UUID project ids lowercased, no duplicates). An
+  invalid file shows an inline `role="alert"` naming the wrong part (projects by position, never
+  the file's content) and writes nothing. A valid one shows its summary and an inline confirmation
+  ("Replace all current folders with this backup?", Cancel focused, Escape cancels) before
+  `FoldersSnapshotStore.replace`.
+- **Danger zone**: "Delete all data" with the same inline confirmation, then
+  `FoldersSnapshotStore.clear`.
+- **Footer**: **Copy diagnostic** and the links (source code, "Not affiliated with Anthropic").
+  The diagnostic (`popup/diagnostic-report.ts`, always in English for the maintainers: extension
+  version, browser name and major version from `browser-label.ts`, stored counts, `hideFiled`, the
+  page diagnostic of an open claude.ai tab) is collected when the popup opens and after data
+  changes, so the click writes it to `navigator.clipboard` while it still counts as a user action.
+  On failure the text is shown selected in a read-only field.
+
+### Firefox: backups in a tab
+
+Firefox hides an action popup as soon as a native dialog takes focus: a file picker (the popup and
+the picked file are lost; Mozilla bug 1884731 and Discourse reports) or a "Save as" dialog (the
+popup's object URL is revoked and the download fails). Chrome keeps the popup open. So the Firefox
+build (`import.meta.env.FIREFOX`) replaces the Backup section with an **Export or import…** button
+that opens `backup.html` with `browser.tabs.create` (no permission needed) and closes the popup.
+That unlisted page (`entrypoints/backup/`, `<meta name="manifest.include" content="['firefox']">`,
+so absent from the Chrome build) renders only the Backup section (`startBackupPage`), where a
+backup file can also be dropped on the zone. Using `browser.downloads` from the background would
+need the `downloads` permission, which the extension does not request.
+
+No native `alert`/`confirm`/`prompt`; status messages use `role="status"` live regions. Colors are
+CSS custom properties redefined under `prefers-color-scheme: dark`.
+
+### Page diagnostic messaging
+
+`shared/page-diagnostic/` carries the diagnostic between the popup and the content script,
+without any new permission:
+
+- The popup calls `browser.tabs.query({ url: 'https://claude.ai/*' })`. Matching on `url`
+  needs the `tabs` permission **or** host permissions for the page; the extension has the latter.
+  The active tab is asked first with `browser.tabs.sendMessage`; tabs without the content script
+  (opened before install) or with an invalid answer are skipped. No answer: the report says no
+  claude.ai tab was found.
+- The content script answers with `answerPageDiagnosticRequests`, only for messages from this
+  extension (`sender.id`), with `diagnose` from `shared/claude-dom`: counts of conversation and
+  project links, expanded sidebar projects, whether the project page Recents block was found, and
+  the page kind (`project`, `chat`, `other`). The answer is validated with Zod on the popup side
+  and unknown fields are dropped, so no id or title can reach the report.
+
 ## Folders UI
 
 `entrypoints/claude.content.ts` is the composition root: it builds `BrowserFoldersRepository`,
 `BrowserHideFiledSetting` and `RandomUuidFolderIdProvider`, mounts the panel layer (below),
 starts the UI with `startFoldersUi` (with `Date.now` as its clock, which dates remembered drags),
-calls `sync()` on WXT's `wxt:locationchange` (claude.ai navigates client-side) and `stop()` on
-`ctx.onInvalidated`. The section CSS (`ui/folders.css`) is
+calls `sync()` on WXT's `wxt:locationchange` (claude.ai navigates client-side), answers the
+popup's page diagnostic requests (see above) and stops both on `ctx.onInvalidated`. The section CSS (`ui/folders.css`) is
 imported there, so WXT injects it into the page through the manifest; the panel CSS
 (`ui/floating-panel.css`) is imported with `?inline` and injected only inside the panel layer's
 shadow root.
