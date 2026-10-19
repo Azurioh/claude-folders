@@ -18,12 +18,10 @@ folders and sub-folders of conversations, per project, to the claude.ai sidebar 
 - Folders and nested sub-folders of conversations, scoped to each claude.ai project.
 - Folders shown in the claude.ai sidebar and on the project page.
 - Custom folder names, colors and emojis.
-- Import of an existing export from the original TamperMonkey script.
 - English and French interface.
 - 100% local: no account, no server, no network requests, no analytics.
 
-The extension is being ported from an existing TamperMonkey userscript; the features above land as
-the port progresses.
+The extension is in early development; the features above land progressively.
 
 ## Install
 

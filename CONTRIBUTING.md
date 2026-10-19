@@ -71,7 +71,7 @@ claude.ai changes its markup from time to time and that is the most common way t
 breaks. To fix it:
 
 1. Save the relevant part of the new page as an HTML fixture next to the existing ones in
-   `src/shared/claude-dom` (strip any personal content: conversation titles, names, emails).
+   `tests/fixtures/` (strip any personal content: conversation titles, names, emails).
 2. Add or update the failing test so it reproduces the breakage against the new fixture.
 3. Fix the selectors or detection logic **only in `src/shared/claude-dom`**. If a fix seems to need
    changes elsewhere, open an issue first: it usually means a DOM detail leaked out of that module.
