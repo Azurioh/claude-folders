@@ -153,6 +153,38 @@ needed by the rules above; tests use them to scope assertions.
   `console.warn` prefixed with `[nest-for-claude]`, and is left untouched in storage: reads never
   write back. It is replaced only when the user next changes that project.
 
+## Folders UI
+
+`entrypoints/claude.content.ts` is the composition root: it builds `BrowserFoldersRepository` and
+`BrowserHideFiledSetting`, starts the UI with `startFoldersUi`, calls `sync()` on WXT's
+`wxt:locationchange` (claude.ai navigates client-side) and `stop()` on `ctx.onInvalidated`. The
+CSS (`ui/folders.css`) is imported there, so WXT injects it through the manifest.
+
+`features/folders/ui/`:
+
+- **Controller** (`folders-ui.controller.ts`): on every sync, asks `shared/claude-dom` for the
+  expanded sidebar projects and the project page "Recents" block, and keeps one `.nfc-section` per
+  anchor: first child of the sidebar project list, and just before the "Recents" heading (whose
+  classes the header copies). Mounts are keyed by section and project, so repeated syncs never
+  duplicate them; a mount whose anchor is gone is removed. Syncs run on DOM mutations (one
+  `MutationObserver`, debounced), on navigation and on storage changes; no polling.
+- **Store** (`project-folders.store.ts`): loads and watches each displayed project through the
+  `FoldersRepository` port; user actions go through `apply`: a pure domain operation, then a save.
+  It lives in `ui/` because it is the UI's view of storage (cache, watches, change callback); the
+  domain stays synchronous and free of ports' async plumbing, and there is no separate application
+  layer.
+- **Views** (`folders-section.view.ts`, `folder-tree.view.ts`): pure rendering from a
+  `ProjectFolders` with `childrenOf` and `countConversations`. A section is rendered again only
+  when its inputs (tree, current conversation, heading classes) change, which also keeps the
+  observer from reacting to our own DOM writes; keyboard focus is restored across re-renders.
+- **Marks** (`filed-marks.ts`): in the native lists next to a section, filed conversations get
+  `data-nfc-hidden` on their row (setting `hideFiled` on) or `data-nfc-filed` on their link (off).
+- `native-row-look.ts` copies the native row look into `--nfc-*` custom properties; it reads
+  layout, so it is the only UI code that needs a rendered page and does nothing in test DOMs.
+
+`stop()` disconnects the observer, cancels the pending sync, ends every storage watch and removes
+the sections and every attribute set on claude.ai's nodes.
+
 ## Rendering rules
 
 - No `innerHTML`, `eval` or remotely loaded code: DOM is built with `document.createElement` and
