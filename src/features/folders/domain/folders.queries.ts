@@ -43,18 +43,31 @@ export function isInside(params: {
   return false;
 }
 
+/** What deleting a folder removes along with it. */
+export interface DeletionImpact {
+  /** The descendant folders deleted with it, at any depth. */
+  readonly subfolders: number;
+  /** The conversations unfiled with it: filed in the folder or in any of its descendants. */
+  readonly conversations: number;
+}
+
 /**
- * Counts the conversations filed in a folder and in all of its descendants.
+ * Lists a folder and all of its descendants, at any depth.
+ * Tolerates corrupted data: each folder is visited once, so a parent cycle ends the walk.
  * @param params.state - The project to inspect.
- * @param params.folderId - The folder whose subtree is counted.
- * @returns The number of conversations in the subtree; 0 for an unknown folder.
+ * @param params.folderId - The root of the subtree.
+ * @returns The ids of the folder and its descendants; empty for an unknown folder.
  */
-export function countConversations(params: { state: ProjectFolders; folderId: FolderId }): number {
+export function subtreeOf(params: {
+  state: ProjectFolders;
+  folderId: FolderId;
+}): ReadonlySet<FolderId> {
   const { state, folderId } = params;
+  const subtree = new Set<FolderId>();
   if (getFolder({ state, folderId }) === undefined) {
-    return 0;
+    return subtree;
   }
-  const subtree = new Set<FolderId>([folderId]);
+  subtree.add(folderId);
   for (const queue = [folderId]; queue.length > 0; ) {
     const parentId = queue.pop();
     for (const folder of Object.values(state.folders)) {
@@ -64,9 +77,43 @@ export function countConversations(params: { state: ProjectFolders; folderId: Fo
       }
     }
   }
-  return Object.values(state.conversations).filter((conversation) =>
-    subtree.has(conversation.folderId),
+  return subtree;
+}
+
+function countConversationsIn(params: {
+  state: ProjectFolders;
+  subtree: ReadonlySet<FolderId>;
+}): number {
+  return Object.values(params.state.conversations).filter((conversation) =>
+    params.subtree.has(conversation.folderId),
   ).length;
+}
+
+/**
+ * Counts the conversations filed in a folder and in all of its descendants.
+ * @param params.state - The project to inspect.
+ * @param params.folderId - The folder whose subtree is counted.
+ * @returns The number of conversations in the subtree; 0 for an unknown folder.
+ */
+export function countConversations(params: { state: ProjectFolders; folderId: FolderId }): number {
+  return countConversationsIn({ state: params.state, subtree: subtreeOf(params) });
+}
+
+/**
+ * Tells what deleting a folder removes along with it, for the confirmation shown beforehand.
+ * @param params.state - The project to inspect.
+ * @param params.folderId - The folder that would be deleted.
+ * @returns The sub-folders deleted and conversations unfiled with it; both 0 for an unknown folder.
+ */
+export function deletionImpact(params: {
+  state: ProjectFolders;
+  folderId: FolderId;
+}): DeletionImpact {
+  const subtree = subtreeOf(params);
+  return {
+    subfolders: Math.max(subtree.size - 1, 0),
+    conversations: countConversationsIn({ state: params.state, subtree }),
+  };
 }
 
 function sortedSubFolders(params: {

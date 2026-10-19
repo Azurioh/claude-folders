@@ -209,7 +209,9 @@ shadow root.
   folder after a delete); a pointer press outside closes it and leaves focus where the user
   pressed. Panels: create folder and rename conversation (`text-field.panel.ts`), folder editor
   with live name, emoji field and grid, palette with `aria-pressed` (`folder-editor.panel.ts`),
-  delete confirmation with Cancel focused (`delete-folder.panel.ts`), the conversation adder
+  delete confirmation with Cancel focused (`delete-folder.panel.ts`; deleting a folder also
+  deletes its sub-folders at any depth and unfiles their conversations, which show again in
+  claude.ai's lists, and the text counts both with `deletionImpact`), the conversation adder
   (`conversation-adder.panel.ts`) and the move panel (`move-destination.panel.ts`).
 - **Drag and drop** (`folder-drag-drop.ts`): sources are our folder and conversation rows and
   claude.ai's conversation links; targets are folder rows (move or file into that folder) and the

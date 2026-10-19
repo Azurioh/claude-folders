@@ -41,7 +41,13 @@ colorBlue: Bleu
 colorViolet: Violet
 colorPink: Rose
 colorTaupe: Taupe
-deleteFolderConfirm: "Supprimer « $1 » ? Son contenu remonte d'un niveau."
+deleteFolderConfirm:
+  0: "Supprimer « $1 » ?"
+  1: "Supprimer « $1 » et son sous-dossier ?"
+  n: "Supprimer « $1 » et ses $2 sous-dossiers ?"
+deleteFolderUnfiledConversations:
+  1: Sa conversation reviendra dans vos listes claude.ai.
+  n: Ses $1 conversations reviendront dans vos listes claude.ai.
 renameConversationHint: Seul le titre affiché dans vos dossiers change.
 adderEmpty: Aucune conversation disponible
 adderHint: Liste les conversations non classées affichées dans la page ou la barre latérale.

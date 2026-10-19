@@ -3,6 +3,7 @@ import type { ProjectFolders } from '@/features/folders/domain/folders.model';
 import {
   childrenOf,
   countConversations,
+  deletionImpact,
   isInside,
 } from '@/features/folders/domain/folders.queries';
 
@@ -79,6 +80,38 @@ describe('countConversations', () => {
   });
 });
 
+describe('deletionImpact', () => {
+  it('counts the sub-folders and conversations deleted with a folder, at any depth', () => {
+    const state = sampleProject();
+    expect(deletionImpact({ state, folderId: 'root' })).toEqual({
+      subfolders: 2,
+      conversations: 4,
+    });
+    expect(deletionImpact({ state, folderId: 'child' })).toEqual({
+      subfolders: 1,
+      conversations: 3,
+    });
+    expect(deletionImpact({ state, folderId: 'grandchild' })).toEqual({
+      subfolders: 0,
+      conversations: 1,
+    });
+  });
+
+  it('is empty for an unknown folder', () => {
+    expect(deletionImpact({ state: sampleProject(), folderId: 'nope' })).toEqual({
+      subfolders: 0,
+      conversations: 0,
+    });
+  });
+
+  it('terminates on a corrupted parent cycle', () => {
+    expect(deletionImpact({ state: cyclicProject(), folderId: 'a' })).toEqual({
+      subfolders: 1,
+      conversations: 1,
+    });
+  });
+});
+
 describe('childrenOf', () => {
   const sortable: ProjectFolders = {
     folders: {
@@ -140,6 +173,13 @@ describe('orphan and inherited references', () => {
 
   it.each(inheritedIds)('countConversations is 0 for inherited id %s', (id) => {
     expect(countConversations({ state: orphanProject(), folderId: id })).toBe(0);
+  });
+
+  it.each(inheritedIds)('deletionImpact is empty for inherited id %s', (id) => {
+    expect(deletionImpact({ state: orphanProject(), folderId: id })).toEqual({
+      subfolders: 0,
+      conversations: 0,
+    });
   });
 
   it('childrenOf is empty for an unknown folder referenced by a conversation', () => {

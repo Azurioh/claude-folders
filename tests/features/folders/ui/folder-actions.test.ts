@@ -364,7 +364,9 @@ describe('folder actions', () => {
     it('asks for confirmation, with Cancel focused', async () => {
       await openConfirmation('Specs');
 
-      expect(panel().textContent).toContain('deleteFolderConfirm(Specs)');
+      expect(panel().textContent).toContain(
+        'deleteFolderConfirm(Specs,0) deleteFolderUnfiledConversations(1)',
+      );
       expect(focusedInLayer(layer)).toBe(panelButton('buttonCancel'));
       expect(panelButton('buttonDelete').classList.contains('nfc-button-danger')).toBe(true);
     });
@@ -378,14 +380,31 @@ describe('folder actions', () => {
       expect(layer.querySelector('[role="dialog"]')).toBeNull();
     });
 
-    it('deletes the folder and moves its content up one level', async () => {
+    it('deletes a sub-folder, unfiles its conversations and focuses the parent row', async () => {
       await openConfirmation('Specs');
 
       panelButton('buttonDelete').click();
 
-      expect(lastSaved()?.folders).not.toHaveProperty('specs');
-      expect(lastSaved()?.conversations[SPECS_CHAT]?.folderId).toBe('work');
+      expect(lastSaved()?.folders).toEqual({ work: sampleProject().folders.work });
+      expect(lastSaved()?.conversations).toEqual({
+        [WORK_CHAT]: sampleProject().conversations[WORK_CHAT],
+      });
       expect(document.activeElement).toBe(folderRow({ root: sidebarSection(), name: 'Work' }));
+    });
+
+    it('deletes a top-level folder with its sub-folders and focuses New folder', async () => {
+      await openConfirmation('Work');
+      expect(panel().textContent).toContain(
+        'deleteFolderConfirm(Work,1) deleteFolderUnfiledConversations(2)',
+      );
+
+      panelButton('buttonDelete').click();
+
+      expect(lastSaved()?.folders).toEqual({});
+      expect(lastSaved()?.conversations).toEqual({});
+      expect(document.activeElement).toBe(
+        action({ root: sidebarSection(), label: 'actionNewFolder' }),
+      );
     });
   });
 

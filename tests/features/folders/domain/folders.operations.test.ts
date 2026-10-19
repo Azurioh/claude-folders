@@ -174,20 +174,47 @@ describe('setFolderAppearance', () => {
 });
 
 describe('deleteFolder', () => {
-  it('moves sub-folders and conversations of a nested folder up one level', () => {
-    const state = stateOf(deleteFolder({ state: sampleProject(), folderId: 'child' }));
-    expect(state.folders.child).toBeUndefined();
-    expect(state.folders.grandchild?.parentId).toBe('root');
-    expect(state.conversations['c-child']).toEqual({ title: 'Child conv', folderId: 'root' });
-    expect(state.conversations['c-grand']).toEqual({ title: 'Grand conv', folderId: 'grandchild' });
+  it('deletes a folder with all its descendants and unfiles their conversations', () => {
+    const state = stateOf(deleteFolder({ state: sampleProject(), folderId: 'root' }));
+    expect(Object.keys(state.folders)).toEqual(['other']);
+    expect(state.conversations).toEqual({});
   });
 
-  it('unfiles the conversations of a root folder and moves its sub-folders to root', () => {
-    const state = stateOf(deleteFolder({ state: sampleProject(), folderId: 'root' }));
-    expect(state.folders.root).toBeUndefined();
-    expect(state.folders.child?.parentId).toBeNull();
-    expect(state.conversations['c-root']).toBeUndefined();
-    expect(state.conversations['c-child']?.folderId).toBe('child');
+  it('deletes a nested folder and its sub-folders, keeping its ancestors and siblings', () => {
+    const state = stateOf(deleteFolder({ state: sampleProject(), folderId: 'child' }));
+    expect(state.folders).toEqual({
+      root: sampleProject().folders.root,
+      other: sampleProject().folders.other,
+    });
+    expect(state.conversations).toEqual({ 'c-root': { title: 'Root conv', folderId: 'root' } });
+  });
+
+  it('deletes a leaf folder and unfiles only its conversations', () => {
+    const state = stateOf(deleteFolder({ state: sampleProject(), folderId: 'grandchild' }));
+    expect(state.folders.grandchild).toBeUndefined();
+    expect(state.folders.child).toEqual(sampleProject().folders.child);
+    expect(state.conversations['c-grand']).toBeUndefined();
+    expect(state.conversations['c-child']).toEqual({ title: 'Child conv', folderId: 'child' });
+  });
+
+  it('terminates on a corrupted parent cycle and deletes the whole cycle', () => {
+    const cyclic: ProjectFolders = {
+      folders: {
+        a: { id: 'a', name: 'A', parentId: 'b', open: false },
+        b: { id: 'b', name: 'B', parentId: 'a', open: false },
+        c: { id: 'c', name: 'C', parentId: 'a', open: false },
+        kept: { id: 'kept', name: 'Kept', parentId: null, open: false },
+      },
+      conversations: {
+        'c-a': { title: 'A conv', folderId: 'a' },
+        'c-c': { title: 'C conv', folderId: 'c' },
+        'c-kept': { title: 'Kept conv', folderId: 'kept' },
+      },
+      sectionOpen: { sidebar: true, projectPage: true },
+    };
+    const state = stateOf(deleteFolder({ state: cyclic, folderId: 'b' }));
+    expect(Object.keys(state.folders)).toEqual(['kept']);
+    expect(Object.keys(state.conversations)).toEqual(['c-kept']);
   });
 
   it('rejects an unknown folder', () => {
@@ -527,12 +554,21 @@ describe('inherited Object properties', () => {
 
   it.each(inheritedIds)('folder %s survives the deletion of another folder', (id) => {
     const created = stateOf(
-      createFolder({ state: sampleProject(), name: 'Odd', parentId: 'child', newId: id }),
+      createFolder({ state: sampleProject(), name: 'Odd', parentId: 'root', newId: id }),
     );
     const state = stateOf(deleteFolder({ state: created, folderId: 'child' }));
     expect(Object.getPrototypeOf(state.folders)).toBe(Object.prototype);
     expect(Object.hasOwn(state.folders, id)).toBe(true);
     expect(state.folders[id]?.parentId).toBe('root');
+  });
+
+  it.each(inheritedIds)('folder %s is deleted with its parent', (id) => {
+    const created = stateOf(
+      createFolder({ state: sampleProject(), name: 'Odd', parentId: 'child', newId: id }),
+    );
+    const state = stateOf(deleteFolder({ state: created, folderId: 'child' }));
+    expect(Object.getPrototypeOf(state.folders)).toBe(Object.prototype);
+    expect(Object.hasOwn(state.folders, id)).toBe(false);
   });
 
   it.each(inheritedIds)('fileConversation stores conversation %s as an own entry', (id) => {
@@ -549,7 +585,7 @@ describe('inherited Object properties', () => {
     expect(state.conversations[id]).toEqual({ title: 'Untitled', folderId: 'child' });
   });
 
-  it.each(inheritedIds)('conversation %s survives the deletion of its folder', (id) => {
+  it.each(inheritedIds)('conversation %s survives the deletion of another folder', (id) => {
     const filed = stateOf(
       fileConversation({
         state: sampleProject(),
@@ -559,8 +595,24 @@ describe('inherited Object properties', () => {
         fallbackTitle: 'Untitled',
       }),
     );
+    const state = stateOf(deleteFolder({ state: filed, folderId: 'other' }));
+    expect(Object.getPrototypeOf(state.conversations)).toBe(Object.prototype);
+    expect(Object.hasOwn(state.conversations, id)).toBe(true);
+    expect(state.conversations[id]).toEqual({ title: 'Odd', folderId: 'child' });
+  });
+
+  it.each(inheritedIds)('conversation %s is unfiled with its folder', (id) => {
+    const filed = stateOf(
+      fileConversation({
+        state: sampleProject(),
+        conversationId: id,
+        folderId: 'grandchild',
+        title: 'Odd',
+        fallbackTitle: 'Untitled',
+      }),
+    );
     const state = stateOf(deleteFolder({ state: filed, folderId: 'child' }));
     expect(Object.getPrototypeOf(state.conversations)).toBe(Object.prototype);
-    expect(state.conversations[id]).toEqual({ title: 'Odd', folderId: 'root' });
+    expect(Object.hasOwn(state.conversations, id)).toBe(false);
   });
 });
