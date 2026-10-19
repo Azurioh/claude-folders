@@ -1,7 +1,7 @@
 {
   "name": "nest-for-claude",
   "description": "Nested folders for your claude.ai conversations, stored locally.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "license": "MIT",
