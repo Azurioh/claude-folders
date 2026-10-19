@@ -1,0 +1,68 @@
+name: Bug report
+description: Something does not work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please check existing issues first.
+        Never paste conversation content you do not want to make public.
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Firefox
+        - Other Chromium-based browser
+    validations:
+      required: true
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser version
+      placeholder: e.g. 131.0.6778.86
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Extension version
+      description: Shown on your browser's extensions page.
+      placeholder: e.g. 0.1.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a project on claude.ai
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostic
+    attributes:
+      label: Diagnostic output
+      description: Errors from the browser console on claude.ai, or any diagnostic output the extension provides. Remove anything private.
+      render: text

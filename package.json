@@ -1,0 +1,38 @@
+{
+  "name": "nest-for-claude",
+  "description": "Nested folders for your claude.ai conversations, stored locally.",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": "Alan Cunin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azurioh/nest-for-claude.git"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "typecheck": "wxt prepare && tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "test": "vitest run",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@wxt-dev/i18n": "0.2.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "lefthook": "2.2.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5",
+    "wxt": "0.21.4"
+  }
+}

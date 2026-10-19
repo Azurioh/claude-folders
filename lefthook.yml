@@ -1,0 +1,6 @@
+# Git hooks managed by lefthook (installed automatically by `pnpm install`).
+# See https://lefthook.dev/configuration/
+pre-commit:
+  jobs:
+    - name: biome
+      run: pnpm exec biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
