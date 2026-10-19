@@ -5,13 +5,15 @@
  * or `{ ok: false, reason }` when the request is invalid (blank name, unknown id, forbidden move).
  * Operations never throw and never mutate the state they receive.
  */
-import type {
-  ConversationId,
-  FiledConversation,
-  Folder,
-  FolderId,
-  ProjectFolders,
-  Section,
+import {
+  type ConversationId,
+  type FiledConversation,
+  type Folder,
+  type FolderId,
+  getConversation,
+  getFolder,
+  type ProjectFolders,
+  type Section,
 } from '@/features/folders/domain/folders.model';
 import { isInside } from '@/features/folders/domain/folders.queries';
 
@@ -75,11 +77,11 @@ export function createFolder(params: {
   if (name === '') {
     return rejected('empty-name');
   }
-  const parent = parentId === null ? null : state.folders[parentId];
+  const parent = parentId === null ? null : getFolder({ state, folderId: parentId });
   if (parent === undefined) {
     return rejected('folder-not-found');
   }
-  if (state.folders[newId] !== undefined) {
+  if (getFolder({ state, folderId: newId }) !== undefined) {
     return rejected('folder-id-taken');
   }
   const created = withFolder({ state, folder: { id: newId, name, parentId, open: true } });
@@ -105,7 +107,7 @@ export function renameFolder(params: {
   if (name === '') {
     return rejected('empty-name');
   }
-  const folder = state.folders[folderId];
+  const folder = getFolder({ state, folderId });
   if (folder === undefined) {
     return rejected('folder-not-found');
   }
@@ -127,7 +129,7 @@ export function setFolderAppearance(params: {
   color?: string;
 }): OperationResult {
   const { state, folderId, color } = params;
-  const folder = state.folders[folderId];
+  const folder = getFolder({ state, folderId });
   if (folder === undefined) {
     return rejected('folder-not-found');
   }
@@ -155,25 +157,30 @@ export function deleteFolder(params: {
   folderId: FolderId;
 }): OperationResult {
   const { state, folderId } = params;
-  const deleted = state.folders[folderId];
+  const deleted = getFolder({ state, folderId });
   if (deleted === undefined) {
     return rejected('folder-not-found');
   }
-  const folders: Record<FolderId, Folder> = {};
-  for (const [id, folder] of Object.entries(state.folders)) {
-    if (id === folderId) {
-      continue;
-    }
-    folders[id] = folder.parentId === folderId ? { ...folder, parentId: deleted.parentId } : folder;
-  }
-  const conversations: Record<ConversationId, FiledConversation> = {};
-  for (const [id, conversation] of Object.entries(state.conversations)) {
-    if (conversation.folderId !== folderId) {
-      conversations[id] = conversation;
-    } else if (deleted.parentId !== null) {
-      conversations[id] = { ...conversation, folderId: deleted.parentId };
-    }
-  }
+  // Object.fromEntries defines own properties, so an id such as `__proto__` stays a plain entry.
+  const folders = Object.fromEntries(
+    Object.entries(state.folders)
+      .filter(([id]) => id !== folderId)
+      .map(([id, folder]): [FolderId, Folder] => [
+        id,
+        folder.parentId === folderId ? { ...folder, parentId: deleted.parentId } : folder,
+      ]),
+  );
+  const { parentId } = deleted;
+  const conversations = Object.fromEntries(
+    Object.entries(state.conversations).flatMap(
+      ([id, conversation]): [ConversationId, FiledConversation][] => {
+        if (conversation.folderId !== folderId) {
+          return [[id, conversation]];
+        }
+        return parentId === null ? [] : [[id, { ...conversation, folderId: parentId }]];
+      },
+    ),
+  );
   return accepted({ ...state, folders, conversations });
 }
 
@@ -191,11 +198,11 @@ export function moveFolder(params: {
   targetParentId: FolderId | null;
 }): OperationResult {
   const { state, folderId, targetParentId } = params;
-  const folder = state.folders[folderId];
+  const folder = getFolder({ state, folderId });
   if (folder === undefined) {
     return rejected('folder-not-found');
   }
-  if (targetParentId !== null && state.folders[targetParentId] === undefined) {
+  if (targetParentId !== null && getFolder({ state, folderId: targetParentId }) === undefined) {
     return rejected('folder-not-found');
   }
   if (isInside({ state, candidateId: targetParentId, ancestorId: folderId })) {
@@ -233,12 +240,12 @@ export function fileConversation(params: {
   fallbackTitle: string;
 }): OperationResult {
   const { state, conversationId, folderId, fallbackTitle } = params;
-  if (state.folders[folderId] === undefined) {
+  if (getFolder({ state, folderId }) === undefined) {
     return rejected('folder-not-found');
   }
   const title = resolveTitle({
     title: params.title,
-    existing: state.conversations[conversationId],
+    existing: getConversation({ state, conversationId }),
     fallbackTitle,
   });
   return accepted(withConversation({ state, conversationId, conversation: { title, folderId } }));
@@ -255,7 +262,7 @@ export function unfileConversation(params: {
   conversationId: ConversationId;
 }): OperationResult {
   const { state, conversationId } = params;
-  if (state.conversations[conversationId] === undefined) {
+  if (getConversation({ state, conversationId }) === undefined) {
     return rejected('conversation-not-found');
   }
   const conversations = Object.fromEntries(
@@ -281,7 +288,7 @@ export function renameConversation(params: {
   if (title === '') {
     return rejected('empty-title');
   }
-  const conversation = state.conversations[conversationId];
+  const conversation = getConversation({ state, conversationId });
   if (conversation === undefined) {
     return rejected('conversation-not-found');
   }
@@ -298,7 +305,7 @@ export function renameConversation(params: {
  */
 export function openFolder(params: { state: ProjectFolders; folderId: FolderId }): OperationResult {
   const { state, folderId } = params;
-  const folder = state.folders[folderId];
+  const folder = getFolder({ state, folderId });
   if (folder === undefined) {
     return rejected('folder-not-found');
   }
@@ -316,7 +323,7 @@ export function toggleFolderOpen(params: {
   folderId: FolderId;
 }): OperationResult {
   const { state, folderId } = params;
-  const folder = state.folders[folderId];
+  const folder = getFolder({ state, folderId });
   if (folder === undefined) {
     return rejected('folder-not-found');
   }

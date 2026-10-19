@@ -427,3 +427,140 @@ describe('toggleSection', () => {
     expect(input).toEqual(sampleProject());
   });
 });
+
+describe('inherited Object properties', () => {
+  const inheritedIds = ['toString', 'constructor', '__proto__', 'hasOwnProperty'];
+
+  type RejectionCase = {
+    readonly name: string;
+    readonly run: (state: ProjectFolders, id: string) => OperationResult;
+    readonly reason: string;
+  };
+
+  const rejectionCases: readonly RejectionCase[] = [
+    {
+      name: 'createFolder parentId',
+      run: (state, id) => createFolder({ state, name: 'New', parentId: id, newId: 'fresh' }),
+      reason: 'folder-not-found',
+    },
+    {
+      name: 'renameFolder folderId',
+      run: (state, id) => renameFolder({ state, folderId: id, name: 'New' }),
+      reason: 'folder-not-found',
+    },
+    {
+      name: 'setFolderAppearance folderId',
+      run: (state, id) => setFolderAppearance({ state, folderId: id, emoji: '📁' }),
+      reason: 'folder-not-found',
+    },
+    {
+      name: 'deleteFolder folderId',
+      run: (state, id) => deleteFolder({ state, folderId: id }),
+      reason: 'folder-not-found',
+    },
+    {
+      name: 'moveFolder folderId',
+      run: (state, id) => moveFolder({ state, folderId: id, targetParentId: 'root' }),
+      reason: 'folder-not-found',
+    },
+    {
+      name: 'moveFolder targetParentId',
+      run: (state, id) => moveFolder({ state, folderId: 'other', targetParentId: id }),
+      reason: 'folder-not-found',
+    },
+    {
+      name: 'fileConversation folderId',
+      run: (state, id) =>
+        fileConversation({
+          state,
+          conversationId: 'c-new',
+          folderId: id,
+          fallbackTitle: 'Untitled',
+        }),
+      reason: 'folder-not-found',
+    },
+    {
+      name: 'openFolder folderId',
+      run: (state, id) => openFolder({ state, folderId: id }),
+      reason: 'folder-not-found',
+    },
+    {
+      name: 'toggleFolderOpen folderId',
+      run: (state, id) => toggleFolderOpen({ state, folderId: id }),
+      reason: 'folder-not-found',
+    },
+    {
+      name: 'unfileConversation conversationId',
+      run: (state, id) => unfileConversation({ state, conversationId: id }),
+      reason: 'conversation-not-found',
+    },
+    {
+      name: 'renameConversation conversationId',
+      run: (state, id) => renameConversation({ state, conversationId: id, title: 'New' }),
+      reason: 'conversation-not-found',
+    },
+  ];
+
+  const matrix = rejectionCases.flatMap((rejectionCase) =>
+    inheritedIds.map((id) => ({ ...rejectionCase, id })),
+  );
+
+  it.each(matrix)('$name rejects inherited id $id', ({ run, id, reason }) => {
+    for (const state of [emptyProject(), sampleProject()]) {
+      const before = structuredClone(state);
+      expect(run(state, id)).toEqual({ ok: false, reason });
+      expect(state).toEqual(before);
+      expect(Object.getPrototypeOf(state.folders)).toBe(Object.prototype);
+      expect(Object.getPrototypeOf(state.conversations)).toBe(Object.prototype);
+    }
+  });
+
+  it.each(inheritedIds)('createFolder stores new id %s as an own folder', (id) => {
+    const state = stateOf(
+      createFolder({ state: sampleProject(), name: 'Odd', parentId: 'root', newId: id }),
+    );
+    expect(Object.hasOwn(state.folders, id)).toBe(true);
+    expect(Object.getPrototypeOf(state.folders)).toBe(Object.prototype);
+    expect(Object.keys(state.folders)).toContain(id);
+    expect(state.folders[id]).toEqual({ id, name: 'Odd', parentId: 'root', open: true });
+  });
+
+  it.each(inheritedIds)('folder %s survives the deletion of another folder', (id) => {
+    const created = stateOf(
+      createFolder({ state: sampleProject(), name: 'Odd', parentId: 'child', newId: id }),
+    );
+    const state = stateOf(deleteFolder({ state: created, folderId: 'child' }));
+    expect(Object.getPrototypeOf(state.folders)).toBe(Object.prototype);
+    expect(Object.hasOwn(state.folders, id)).toBe(true);
+    expect(state.folders[id]?.parentId).toBe('root');
+  });
+
+  it.each(inheritedIds)('fileConversation stores conversation %s as an own entry', (id) => {
+    const state = stateOf(
+      fileConversation({
+        state: sampleProject(),
+        conversationId: id,
+        folderId: 'child',
+        fallbackTitle: 'Untitled',
+      }),
+    );
+    expect(Object.getPrototypeOf(state.conversations)).toBe(Object.prototype);
+    expect(Object.hasOwn(state.conversations, id)).toBe(true);
+    expect(state.conversations[id]).toEqual({ title: 'Untitled', folderId: 'child' });
+  });
+
+  it.each(inheritedIds)('conversation %s survives the deletion of its folder', (id) => {
+    const filed = stateOf(
+      fileConversation({
+        state: sampleProject(),
+        conversationId: id,
+        folderId: 'child',
+        title: 'Odd',
+        fallbackTitle: 'Untitled',
+      }),
+    );
+    const state = stateOf(deleteFolder({ state: filed, folderId: 'child' }));
+    expect(Object.getPrototypeOf(state.conversations)).toBe(Object.prototype);
+    expect(state.conversations[id]).toEqual({ title: 'Odd', folderId: 'root' });
+  });
+});

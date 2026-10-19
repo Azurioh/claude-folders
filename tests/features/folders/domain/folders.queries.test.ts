@@ -119,3 +119,38 @@ describe('childrenOf', () => {
     expect(childrenOf({ state: sortable, parentId: 'nope' })).toEqual([]);
   });
 });
+
+describe('orphan and inherited references', () => {
+  const inheritedIds = ['toString', 'constructor', '__proto__', 'hasOwnProperty'];
+
+  function orphanProject(): ProjectFolders {
+    return {
+      folders: { root: { id: 'root', name: 'Root', parentId: null, open: true } },
+      conversations: {
+        'c-orphan': { title: 'Orphan conv', folderId: 'ghost' },
+        'c-proto': { title: 'Proto conv', folderId: '__proto__' },
+      },
+      sectionOpen: { sidebar: true, projectPage: true },
+    };
+  }
+
+  it('countConversations is 0 for an unknown folder referenced by a conversation', () => {
+    expect(countConversations({ state: orphanProject(), folderId: 'ghost' })).toBe(0);
+  });
+
+  it.each(inheritedIds)('countConversations is 0 for inherited id %s', (id) => {
+    expect(countConversations({ state: orphanProject(), folderId: id })).toBe(0);
+  });
+
+  it('childrenOf is empty for an unknown folder referenced by a conversation', () => {
+    expect(childrenOf({ state: orphanProject(), parentId: 'ghost' })).toEqual([]);
+  });
+
+  it.each(inheritedIds)('childrenOf is empty for inherited id %s', (id) => {
+    expect(childrenOf({ state: orphanProject(), parentId: id })).toEqual([]);
+  });
+
+  it.each(inheritedIds)('isInside is false for inherited candidate %s', (id) => {
+    expect(isInside({ state: orphanProject(), candidateId: id, ancestorId: 'root' })).toBe(false);
+  });
+});

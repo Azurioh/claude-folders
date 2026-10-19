@@ -1,9 +1,10 @@
-import type {
-  ConversationId,
-  FiledConversation,
-  Folder,
-  FolderId,
-  ProjectFolders,
+import {
+  type ConversationId,
+  type FiledConversation,
+  type Folder,
+  type FolderId,
+  getFolder,
+  type ProjectFolders,
 } from '@/features/folders/domain/folders.model';
 
 export type FolderChild =
@@ -32,7 +33,7 @@ export function isInside(params: {
   for (
     let current = candidateId;
     current !== null && !visited.has(current);
-    current = state.folders[current]?.parentId ?? null
+    current = getFolder({ state, folderId: current })?.parentId ?? null
   ) {
     if (current === ancestorId) {
       return true;
@@ -50,6 +51,9 @@ export function isInside(params: {
  */
 export function countConversations(params: { state: ProjectFolders; folderId: FolderId }): number {
   const { state, folderId } = params;
+  if (getFolder({ state, folderId }) === undefined) {
+    return 0;
+  }
   const subtree = new Set<FolderId>([folderId]);
   for (const queue = [folderId]; queue.length > 0; ) {
     const parentId = queue.pop();
@@ -90,13 +94,16 @@ function sortedConversations(params: { state: ProjectFolders; folderId: FolderId
  * conversations are not part of the tree.
  * @param params.state - The project to inspect.
  * @param params.parentId - The folder to list, or `null` for the root.
- * @returns The ordered children.
+ * @returns The ordered children; empty for an unknown folder.
  */
 export function childrenOf(params: {
   state: ProjectFolders;
   parentId: FolderId | null;
 }): FolderChild[] {
   const { state, parentId } = params;
+  if (parentId !== null && getFolder({ state, folderId: parentId }) === undefined) {
+    return [];
+  }
   const folders = sortedSubFolders({ state, parentId });
   if (parentId === null) {
     return folders;

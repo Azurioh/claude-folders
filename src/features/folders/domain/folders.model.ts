@@ -35,3 +35,35 @@ export function emptyProject(): ProjectFolders {
     sectionOpen: { sidebar: true, projectPage: true },
   };
 }
+
+/**
+ * Looks up a folder by id. Only own entries count, so ids such as `toString` or `__proto__` never
+ * resolve to inherited `Object.prototype` members.
+ * @param params.state - The project to inspect.
+ * @param params.folderId - The folder to find.
+ * @returns The folder, or `undefined` when the project has no such folder.
+ */
+export function getFolder(params: {
+  state: ProjectFolders;
+  folderId: FolderId;
+}): Folder | undefined {
+  const { state, folderId } = params;
+  return Object.hasOwn(state.folders, folderId) ? state.folders[folderId] : undefined;
+}
+
+/**
+ * Looks up a filed conversation by id. Only own entries count, so ids such as `toString` or
+ * `__proto__` never resolve to inherited `Object.prototype` members.
+ * @param params.state - The project to inspect.
+ * @param params.conversationId - The conversation to find.
+ * @returns The conversation, or `undefined` when it is not filed in the project.
+ */
+export function getConversation(params: {
+  state: ProjectFolders;
+  conversationId: ConversationId;
+}): FiledConversation | undefined {
+  const { state, conversationId } = params;
+  return Object.hasOwn(state.conversations, conversationId)
+    ? state.conversations[conversationId]
+    : undefined;
+}
