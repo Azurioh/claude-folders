@@ -21,8 +21,6 @@ jobs:
     steps:
       - id: release
         uses: googleapis/release-please-action@v5
-        with:
-          release-type: node
 
   publish-assets:
     name: Build and attach zips
