@@ -48,22 +48,24 @@ export class ProjectFoldersStore {
    * and projects that are not loaded yet are ignored.
    * @param params.projectId - The project to update.
    * @param params.operation - The pure update to apply.
+   * @returns `true` when the operation was applied, `false` when it was ignored.
    */
   apply(params: {
     projectId: ProjectId;
     operation: (state: ProjectFolders) => OperationResult;
-  }): void {
+  }): boolean {
     const { projectId, operation } = params;
     const tracked = this.projects.get(projectId);
     if (tracked === undefined || tracked.state === null) {
-      return;
+      return false;
     }
     const result = operation(tracked.state);
     if (!result.ok) {
-      return;
+      return false;
     }
     this.update({ tracked, state: result.state });
     void this.repository.save({ projectId, state: result.state });
+    return true;
   }
 
   /** Stops every watch; later loads and changes are ignored. */

@@ -12,18 +12,30 @@ pinned in `package.json`; run `corepack enable` once).
 git clone https://github.com/Azurioh/nest-for-claude.git
 cd nest-for-claude
 pnpm install   # also runs `wxt prepare` and installs the lefthook git hooks
-pnpm dev       # opens Chrome with the extension loaded and hot reload
+pnpm dev       # dev build in dist/chrome-mv3-dev, rebuilt on every change
 ```
 
-To try it, sign in to claude.ai in the opened browser and open a project page or expand a project
-in the sidebar: a "Folders" section appears there.
+`pnpm dev` does **not** open a browser (the project deliberately does not use `web-ext`): load the
+dev build into your own browser once, it then reloads on every rebuild.
+
+- **Chrome** (or any Chromium browser): open `chrome://extensions`, turn on **Developer mode**,
+  click **Load unpacked** and pick the `dist/chrome-mv3-dev` folder.
+- **Firefox**: run `pnpm dev:firefox`, open `about:debugging#/runtime/this-firefox`, click
+  **Load Temporary Add-on…** and pick `dist/firefox-mv3-dev/manifest.json`. Temporary add-ons are
+  removed when Firefox closes.
+
+Before testing, disable any other extension or userscript that adds folders to claude.ai (such as
+the legacy Tampermonkey script): both would edit the same lists.
+
+To try it, sign in to claude.ai and open a project page or expand a project in the sidebar: a
+"Folders" section appears there.
 
 ## Scripts
 
 | Script               | What it does                                                      |
 | -------------------- | ----------------------------------------------------------------- |
-| `pnpm dev`           | Dev build for Chrome with hot reload (named "Nest for Claude (dev)") |
-| `pnpm dev:firefox`   | Same, for Firefox                                                 |
+| `pnpm dev`           | Dev build for Chrome in `dist/chrome-mv3-dev`, rebuilt on change (named "Nest for Claude (dev)"); load it unpacked |
+| `pnpm dev:firefox`   | Same, for Firefox in `dist/firefox-mv3-dev`                       |
 | `pnpm build`         | Production build for Chrome in `dist/chrome-mv3`               |
 | `pnpm build:firefox` | Production build for Firefox in `dist/firefox-mv3`             |
 | `pnpm zip`           | Store zip for Chrome                                              |

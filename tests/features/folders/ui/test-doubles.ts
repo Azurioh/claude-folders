@@ -1,7 +1,12 @@
 import { loadFixture } from '@@/tests/shared/claude-dom/fixtures';
 import { vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
-import { emptyProject, type ProjectFolders } from '@/features/folders/domain/folders.model';
+import type { FolderIdProvider } from '@/features/folders/domain/folder-id.provider';
+import {
+  emptyProject,
+  type FolderId,
+  type ProjectFolders,
+} from '@/features/folders/domain/folders.model';
 import type {
   FoldersRepository,
   ProjectFoldersListener,
@@ -124,4 +129,56 @@ export async function flushPromises(): Promise<void> {
   await new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
+}
+
+/**
+ * Builds the layer floating panels are rendered in, as the content script does: a container
+ * inside an open shadow root attached to an element of the document body.
+ * @returns The container, inside its shadow root.
+ */
+export function createPanelLayer(): HTMLElement {
+  const host = document.createElement('nfc-panels');
+  document.body.append(host);
+  const container = document.createElement('div');
+  host.attachShadow({ mode: 'open' }).append(container);
+  return container;
+}
+
+/**
+ * Returns the element focused inside the shadow root holding `layer`.
+ * @param layer - The panel layer.
+ * @returns The focused element of that shadow root, or `null`.
+ */
+export function focusedInLayer(layer: HTMLElement): Element | null {
+  const root = layer.getRootNode();
+  return root instanceof ShadowRoot ? root.activeElement : null;
+}
+
+/**
+ * Presses a key on an element, as the keyboard would.
+ * @param params.target - The element receiving the key.
+ * @param params.key - The `KeyboardEvent.key` value.
+ */
+export function pressKey(params: { target: Element; key: string }): void {
+  params.target.dispatchEvent(
+    new KeyboardEvent('keydown', { key: params.key, bubbles: true, composed: true }),
+  );
+}
+
+/**
+ * Presses a pointer on an element, as a mouse or a finger would before a click.
+ * @param target - The element pressed.
+ */
+export function pressPointer(target: Element): void {
+  target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
+}
+
+/** {@link FolderIdProvider} returning `folder-1`, `folder-2`… in order. */
+export class SequentialFolderIdProvider implements FolderIdProvider {
+  private count = 0;
+
+  nextId(): FolderId {
+    this.count += 1;
+    return `folder-${this.count}`;
+  }
 }

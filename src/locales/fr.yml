@@ -9,3 +9,39 @@ projectFoldersEmpty: Aucun dossier pour ce projet pour l'instant.
 folderConversationCount:
   1: 1 conversation
   n: $1 conversations
+actionNewFolder: Nouveau dossier
+actionNewSubfolder: "Nouveau sous-dossier dans « $1 »"
+actionAddConversations: "Ajouter des conversations à « $1 »"
+actionEditFolder: "Modifier « $1 » (nom, emoji, couleur)"
+actionDeleteFolder: "Supprimer « $1 »"
+actionRenameConversation: "Renommer « $1 »"
+actionUnfileConversation: "Retirer « $1 » du dossier"
+panelEditFolderTitle: Modifier le dossier
+panelDeleteFolderTitle: Supprimer le dossier
+panelRenameConversationTitle: Renommer la conversation
+panelAddConversationsTitle: "Ajouter à « $1 »"
+fieldName: Nom
+fieldTitle: Titre
+fieldEmoji: Emoji
+fieldColor: Couleur
+fieldFilter: Filtrer les conversations
+filterPlaceholder: Filtrer…
+buttonCreate: Créer
+buttonRename: Renommer
+buttonCancel: Annuler
+buttonDelete: Supprimer
+emojiDefaultIcon: Icône de dossier par défaut
+colorNone: Aucune couleur
+colorClay: Argile
+colorOchre: Ocre
+colorOlive: Olive
+colorGreen: Vert
+colorTeal: Sarcelle
+colorBlue: Bleu
+colorViolet: Violet
+colorPink: Rose
+colorTaupe: Taupe
+deleteFolderConfirm: "Supprimer « $1 » ? Son contenu remonte d'un niveau."
+renameConversationHint: Seul le titre affiché dans vos dossiers change.
+adderEmpty: Aucune conversation disponible
+adderHint: Liste les conversations non classées affichées dans la page ou la barre latérale.

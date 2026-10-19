@@ -35,11 +35,12 @@ describe('ProjectFoldersStore', () => {
     store.find(PROJECT);
     await flushPromises();
 
-    store.apply({
+    const applied = store.apply({
       projectId: PROJECT,
       operation: (state) => toggleFolderOpen({ state, folderId: 'work' }),
     });
 
+    expect(applied).toBe(true);
     expect(store.find(PROJECT)).toEqual(withFolder(false));
     expect(repository.saved).toEqual([{ projectId: PROJECT, state: withFolder(false) }]);
   });
@@ -50,11 +51,12 @@ describe('ProjectFoldersStore', () => {
     store.find(PROJECT);
     await flushPromises();
 
-    store.apply({
+    const applied = store.apply({
       projectId: PROJECT,
       operation: (state) => toggleFolderOpen({ state, folderId: 'missing' }),
     });
 
+    expect(applied).toBe(false);
     expect(repository.saved).toEqual([]);
   });
 

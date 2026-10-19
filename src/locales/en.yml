@@ -9,3 +9,39 @@ projectFoldersEmpty: No folders for this project yet.
 folderConversationCount:
   1: 1 conversation
   n: $1 conversations
+actionNewFolder: New folder
+actionNewSubfolder: "New sub-folder in “$1”"
+actionAddConversations: "Add conversations to “$1”"
+actionEditFolder: "Edit “$1” (name, emoji, color)"
+actionDeleteFolder: "Delete “$1”"
+actionRenameConversation: "Rename “$1”"
+actionUnfileConversation: "Remove “$1” from the folder"
+panelEditFolderTitle: Edit folder
+panelDeleteFolderTitle: Delete folder
+panelRenameConversationTitle: Rename conversation
+panelAddConversationsTitle: "Add to “$1”"
+fieldName: Name
+fieldTitle: Title
+fieldEmoji: Emoji
+fieldColor: Color
+fieldFilter: Filter conversations
+filterPlaceholder: Filter…
+buttonCreate: Create
+buttonRename: Rename
+buttonCancel: Cancel
+buttonDelete: Delete
+emojiDefaultIcon: Default folder icon
+colorNone: No color
+colorClay: Clay
+colorOchre: Ochre
+colorOlive: Olive
+colorGreen: Green
+colorTeal: Teal
+colorBlue: Blue
+colorViolet: Violet
+colorPink: Pink
+colorTaupe: Taupe
+deleteFolderConfirm: "Delete “$1”? Its content moves up one level."
+renameConversationHint: Only the title shown in your folders changes.
+adderEmpty: No conversation available
+adderHint: Lists unfiled conversations shown in the page or sidebar.

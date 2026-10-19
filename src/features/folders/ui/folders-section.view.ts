@@ -7,8 +7,14 @@ import {
   type FolderTreeHandlers,
   renderFolderTree,
 } from '@/features/folders/ui/folder-tree.view';
+import { createIcon } from '@/features/folders/ui/icons';
+import { createRowItem, onActionClick } from '@/features/folders/ui/row-actions';
 
 const PROJECT_PAGE_HEADING_LEVEL = '2';
+const NEW_FOLDER_ICON_SIZE = 14;
+
+/** Focus key of the "New folder" button of a section, where focus falls back after a delete. */
+export const NEW_FOLDER_FOCUS_KEY = 'new-folder';
 
 /** Reactions of a rendered folders section to user actions. */
 export interface FoldersSectionHandlers extends FolderTreeHandlers {
@@ -29,7 +35,7 @@ function sidebarHeader(params: {
   document: Document;
   open: boolean;
   handlers: FoldersSectionHandlers;
-}): HTMLButtonElement {
+}): HTMLElement {
   const { document, open, handlers } = params;
   const header = createElement({
     document,
@@ -41,17 +47,66 @@ function sidebarHeader(params: {
   header.addEventListener('click', () => {
     handlers.onToggleSection('sidebar');
   });
-  return header;
+  return createRowItem({
+    document,
+    row: header,
+    actions: [
+      {
+        icon: 'plus',
+        label: i18n.t('actionNewFolder'),
+        focusKey: NEW_FOLDER_FOCUS_KEY,
+        onActivate: (anchor) => {
+          handlers.onCreateFolder({ parentId: null, anchor });
+        },
+      },
+    ],
+  });
 }
 
-function projectPageHeader(params: { document: Document; headingClass: string }): HTMLElement {
-  const { document, headingClass } = params;
+function projectPageNewFolderButton(params: {
+  document: Document;
+  handlers: FoldersSectionHandlers;
+}): HTMLButtonElement {
+  const { document, handlers } = params;
+  const button = createElement({
+    document,
+    tag: 'button',
+    className: 'nfc-new',
+    attributes: { type: 'button', [FOCUS_KEY_ATTRIBUTE]: NEW_FOLDER_FOCUS_KEY },
+    children: [
+      createIcon({ document, name: 'plus', size: NEW_FOLDER_ICON_SIZE, className: 'nfc-new-icon' }),
+      i18n.t('actionNewFolder'),
+    ],
+  });
+  onActionClick({
+    button,
+    onActivate: (anchor) => {
+      handlers.onCreateFolder({ parentId: null, anchor });
+    },
+  });
+  return button;
+}
+
+function projectPageHeader(params: {
+  document: Document;
+  headingClass: string;
+  handlers: FoldersSectionHandlers;
+}): HTMLElement {
+  const { document, headingClass, handlers } = params;
   return createElement({
     document,
     tag: 'div',
-    className: `nfc-header ${headingClass}`.trim(),
-    attributes: { role: 'heading', 'aria-level': PROJECT_PAGE_HEADING_LEVEL },
-    children: [headerLabel(document)],
+    className: 'nfc-header-bar',
+    children: [
+      createElement({
+        document,
+        tag: 'div',
+        className: `nfc-header ${headingClass}`.trim(),
+        attributes: { role: 'heading', 'aria-level': PROJECT_PAGE_HEADING_LEVEL },
+        children: [headerLabel(document)],
+      }),
+      projectPageNewFolderButton({ document, handlers }),
+    ],
   });
 }
 
@@ -105,7 +160,7 @@ export function renderFoldersSection(params: {
   const header =
     section === 'sidebar'
       ? sidebarHeader({ document, open: state.sectionOpen.sidebar, handlers })
-      : projectPageHeader({ document, headingClass });
+      : projectPageHeader({ document, headingClass, handlers });
   replaceKeepingFocus({
     container,
     children: [header, ...sectionBody({ ...params, document })],

@@ -46,7 +46,7 @@ button.nfc-row {
   cursor: pointer;
 }
 
-.nfc-sidebar .nfc-header:hover,
+.nfc-sidebar .nfc-item:hover > .nfc-header,
 .nfc-sidebar .nfc-header:focus-visible {
   opacity: 1;
 }
@@ -76,7 +76,7 @@ button.nfc-row {
   border-bottom: var(--nfc-border, 1px solid color-mix(in srgb, currentColor 10%, transparent));
 }
 
-.nfc-row:hover {
+.nfc-item:hover > .nfc-row {
   background: color-mix(in srgb, currentColor 6%, transparent);
 }
 
@@ -111,7 +111,7 @@ button.nfc-row {
   background: color-mix(in srgb, var(--nfc-accent) 13%, transparent);
 }
 
-.nfc-sidebar .nfc-folder[data-color]:hover {
+.nfc-sidebar .nfc-item:hover > .nfc-folder[data-color] {
   background: color-mix(in srgb, var(--nfc-accent) 20%, transparent);
 }
 
@@ -174,11 +174,138 @@ button.nfc-row {
   border: 0;
 }
 
-/* Touch screens: every row and the section toggle are at least 44px tall. */
+/* Row actions: shown on hover, on keyboard focus (they stay focusable while transparent) and
+   always on devices that cannot hover (see below). The count makes room for them. */
+.nfc-item {
+  position: relative;
+}
+
+.nfc-actions {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nfc-item:hover > .nfc-actions,
+.nfc-item:focus-within > .nfc-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.nfc-item:hover > :first-child,
+.nfc-item:focus-within > :first-child {
+  padding-inline-end: calc(var(--nfc-actions, 0) * 24px + 8px);
+}
+
+.nfc-item:hover > .nfc-row .nfc-count,
+.nfc-item:focus-within > .nfc-row .nfc-count {
+  display: none;
+}
+
+.nfc-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.nfc-action:hover,
+.nfc-action:focus-visible {
+  opacity: 1;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.nfc-action:focus-visible,
+.nfc-new:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+/* Project page header: the native-looking heading and its "New folder" text button. */
+.nfc-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nfc-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 32px;
+  margin: 0;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8125rem;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.nfc-new:hover,
+.nfc-new:focus-visible {
+  opacity: 1;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+/* Devices that cannot hover: actions are always shown. */
+@media (hover: none) {
+  .nfc-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .nfc-item > :first-child {
+    padding-inline-end: calc(var(--nfc-actions, 0) * 24px + 8px);
+  }
+
+  .nfc-row .nfc-count {
+    display: none;
+  }
+}
+
+/* Touch screens: every row, the section toggle and every action are at least 44px. */
 @media (pointer: coarse) {
   .nfc-row,
-  .nfc-sidebar .nfc-header {
+  .nfc-sidebar .nfc-header,
+  .nfc-new {
     min-height: max(44px, var(--nfc-row-h, 0px));
+  }
+
+  .nfc-action {
+    width: 44px;
+    height: 44px;
+  }
+
+  .nfc-item:hover > :first-child,
+  .nfc-item:focus-within > :first-child {
+    padding-inline-end: calc(var(--nfc-actions, 0) * 46px + 8px);
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .nfc-item > :first-child {
+    padding-inline-end: calc(var(--nfc-actions, 0) * 46px + 8px);
   }
 }
 
