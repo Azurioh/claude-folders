@@ -58,3 +58,17 @@ export const RELATIVE_TIME_FR_SUFFIX_PATTERN = /\s+il y a\s+.*$/i;
 export const ROW_MAX_DEPTH = 4;
 /** How far `findProjectRecents` climbs from the heading to the list it labels. */
 export const RECENTS_LIST_MAX_DEPTH = 4;
+
+/**
+ * Attributes of `<html>` and `<body>` through which claude.ai switches its theme: `data-mode`
+ * (`light`/`dark`) and `data-theme` on the root, plus the classes and inline styles that carry
+ * the theme tokens. Other root attributes (build ids, boot state) change without restyling rows.
+ */
+export const THEME_ROOT_ATTRIBUTES: readonly string[] = [
+  'data-mode',
+  'data-theme',
+  'class',
+  'style',
+];
+/** Media query whose changes follow the OS theme, which claude.ai's "system" appearance mirrors. */
+export const COLOR_SCHEME_QUERY = '(prefers-color-scheme: dark)';

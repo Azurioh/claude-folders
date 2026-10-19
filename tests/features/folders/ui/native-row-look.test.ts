@@ -45,4 +45,24 @@ describe('copyNativeRowLook', () => {
     expect(section.style.getPropertyValue('--nfc-font')).toBe('14px');
     expect(section.style.getPropertyValue('--nfc-color')).toBe('rgb(10, 20, 30)');
   });
+
+  it('drops a copied bottom border once the native row no longer has one', () => {
+    const root = loadFixture('chat-page');
+    const list = document.importNode(sidebarList(root), true);
+    document.body.replaceChildren(list);
+    const row = rowOf(linkTo({ root: list, href: `/chat/${fakeId(0x0a)}` }));
+    if (!(row instanceof HTMLElement)) {
+      throw new Error('The native row is not an HTML element');
+    }
+    showRow(row);
+    row.style.borderBottom = '1px solid rgb(1, 2, 3)';
+    const section = document.createElement('div');
+    copyNativeRowLook({ section, list });
+    expect(section.style.getPropertyValue('--nfc-border')).not.toBe('');
+
+    row.style.borderBottom = '0px none rgb(1, 2, 3)';
+    copyNativeRowLook({ section, list });
+
+    expect(section.style.getPropertyValue('--nfc-border')).toBe('');
+  });
 });

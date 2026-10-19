@@ -77,6 +77,30 @@ function firstNativeLinkTo(conversationId: string): HTMLAnchorElement {
   return link;
 }
 
+const ROW_HEIGHT = 36;
+const DARK_TEXT = 'rgb(20, 20, 19)';
+const LIGHT_TEXT = 'rgb(250, 249, 245)';
+const COLOR_SCHEME_QUERY = '(prefers-color-scheme: dark)';
+
+/** Gives the first native sidebar row a layout, so its look can be copied; returns its link. */
+function layOutSidebarRow(): HTMLAnchorElement {
+  const [link] = nativeChatLinks(elementOf({ root: document, selector: SIDEBAR_LIST_SELECTOR }));
+  if (link === undefined) {
+    throw new Error('No native sidebar link in the fixture');
+  }
+  const row = rowOf(link);
+  Object.defineProperty(row, 'offsetHeight', { value: ROW_HEIGHT });
+  row.getBoundingClientRect = () => new DOMRect(0, 0, 200, ROW_HEIGHT);
+  return link;
+}
+
+/** Makes every `matchMedia` call return one query list, so tests can fire its `change` events. */
+function stubColorScheme(): MediaQueryList {
+  const query = window.matchMedia(COLOR_SCHEME_QUERY);
+  vi.spyOn(window, 'matchMedia').mockReturnValue(query);
+  return query;
+}
+
 async function wait(ms: number): Promise<void> {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -311,6 +335,82 @@ describe('startFoldersUi', () => {
       expect(sidebarSection().querySelectorAll('.nfc-folder')).toHaveLength(1);
       const filed = firstNativeLinkTo(FILED_CHAT);
       expect(rowOf(filed).hasAttribute('data-nfc-hidden')).toBe(false);
+    });
+  });
+
+  describe('theme changes', () => {
+    async function startWithLaidOutRow(): Promise<HTMLAnchorElement> {
+      await start({ page: 'chat-page', path: CHAT_PAGE });
+      const link = layOutSidebarRow();
+      link.style.color = DARK_TEXT;
+      ui?.sync();
+      expect(sidebarSection().style.getPropertyValue('--nfc-color')).toBe(DARK_TEXT);
+      link.style.color = LIGHT_TEXT;
+      return link;
+    }
+
+    it('keeps the copied look while the theme does not change', async () => {
+      await startWithLaidOutRow();
+
+      ui?.sync();
+
+      expect(sidebarSection().style.getPropertyValue('--nfc-color')).toBe(DARK_TEXT);
+    });
+
+    it('copies the look again when claude.ai switches its theme on the root element', async () => {
+      await startWithLaidOutRow();
+
+      document.documentElement.setAttribute('data-mode', 'light');
+      await wait(MUTATION_DEBOUNCE_WAIT_MS);
+
+      expect(sidebarSection().style.getPropertyValue('--nfc-color')).toBe(LIGHT_TEXT);
+    });
+
+    it('copies the look again when the body classes change', async () => {
+      await startWithLaidOutRow();
+
+      document.body.classList.add('nfc-test-theme');
+      await wait(MUTATION_DEBOUNCE_WAIT_MS);
+
+      expect(sidebarSection().style.getPropertyValue('--nfc-color')).toBe(LIGHT_TEXT);
+    });
+
+    it('copies the look again when the OS color scheme changes', async () => {
+      const query = stubColorScheme();
+      await startWithLaidOutRow();
+
+      query.dispatchEvent(new Event('change'));
+      await wait(MUTATION_DEBOUNCE_WAIT_MS);
+
+      expect(sidebarSection().style.getPropertyValue('--nfc-color')).toBe(LIGHT_TEXT);
+    });
+
+    it('listens to the color scheme once, whatever the number of syncs', async () => {
+      const query = stubColorScheme();
+      const addListener = vi.spyOn(query, 'addEventListener');
+      await start({ page: 'chat-page', path: CHAT_PAGE });
+
+      ui?.sync();
+      ui?.sync();
+
+      expect(addListener).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops following theme changes once stopped', async () => {
+      const query = stubColorScheme();
+      const removeListener = vi.spyOn(query, 'removeEventListener');
+      const link = await startWithLaidOutRow();
+      const section = sidebarSection();
+
+      ui?.stop();
+      section.style.removeProperty('--nfc-color');
+      document.documentElement.setAttribute('data-mode', 'light');
+      query.dispatchEvent(new Event('change'));
+      await wait(MUTATION_DEBOUNCE_WAIT_MS);
+
+      expect(removeListener).toHaveBeenCalledWith('change', expect.any(Function));
+      expect(section.style.getPropertyValue('--nfc-color')).toBe('');
+      expect(link.style.color).toBe(LIGHT_TEXT);
     });
   });
 

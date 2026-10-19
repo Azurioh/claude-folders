@@ -250,10 +250,15 @@ shadow root.
 - **Marks** (`filed-marks.ts`): in the native lists next to a section, filed conversations get
   `data-nfc-hidden` on their row (setting `hideFiled` on) or `data-nfc-filed` on their link (off).
 - `native-row-look.ts` copies the native row look into `--nfc-*` custom properties; it reads
-  layout, so it is the only UI code that needs a rendered page and does nothing in test DOMs.
+  layout, so it is the only UI code that needs a rendered page and does nothing in test DOMs. The
+  text color is copied, not inherited: the native link sets its own secondary color while the list
+  inherits the page's primary one. The copy is made once per mount, then again (at the next
+  debounced sync) whenever the theme may have changed: a `prefers-color-scheme` change, or a change
+  of a theme attribute (`THEME_ROOT_ATTRIBUTES`: `data-mode`, `data-theme`, `class`, `style`) on
+  `<html>` or `<body>`. An open floating panel keeps the colors it opened with until reopened.
 
 `stop()` closes the open panel, removes the drag listeners and feedback, disconnects the
-observer, cancels the pending sync, ends every storage watch, removes the sections and every
+observers, stops listening to the color scheme, cancels the pending sync, ends every storage watch, removes the sections and every
 attribute set on claude.ai's nodes and restores the native links' `draggable`; WXT removes the
 panel layer when the context is invalidated.
 

@@ -18,6 +18,9 @@ function linkOf(row: HTMLElement): Element {
 /**
  * Copies the look of claude.ai's rows in a list (font size, text color, row height and bottom
  * border) into custom properties of a folders section, so its rows match the native ones.
+ * The color is copied rather than inherited because the native link sets its own (secondary)
+ * text color while the list around it inherits the page's primary one. Calling it again replaces
+ * the previous copy, which is how the look follows a theme change.
  * This reads layout and computed styles, so it only works on a rendered page: while no native row
  * is laid out (hidden list, test DOM) nothing is copied and the CSS fallbacks apply.
  * @param params.section - The folders section receiving `--nfc-font`, `--nfc-color`,
@@ -42,6 +45,8 @@ export function copyNativeRowLook(params: { section: HTMLElement; list: ParentNo
       '--nfc-border',
       `${rowStyle.borderBottomWidth} ${rowStyle.borderBottomStyle} ${rowStyle.borderBottomColor}`,
     );
+  } else {
+    section.style.removeProperty('--nfc-border');
   }
   return true;
 }
