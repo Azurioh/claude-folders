@@ -68,14 +68,32 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
 ## When claude.ai's DOM changes
 
 claude.ai changes its markup from time to time and that is the most common way the extension
-breaks. To fix it:
+breaks. Every assumption about that markup lives in `src/shared/claude-dom/` (selectors and
+patterns in `selectors.ts`), tested against snapshots in `tests/fixtures/claude-dom/`. To fix a
+breakage:
 
-1. Save the relevant part of the new page as an HTML fixture next to the existing ones in
-   `tests/fixtures/` (strip any personal content: conversation titles, names, emails).
-2. Add or update the failing test so it reproduces the breakage against the new fixture.
-3. Fix the selectors or detection logic **only in `src/shared/claude-dom`**. If a fix seems to need
-   changes elsewhere, open an issue first: it usually means a DOM detail leaked out of that module.
-4. Keep the old fixture if the old markup can still be served, so both stay supported.
+1. Recapture the fixtures with [`scripts/capture-fixture.js`](scripts/capture-fixture.js). It
+   clones the page, drops scripts, styles and SVG paths, replaces conversation titles with
+   "Conversation N", project names with "Project N", other text with "Text", and real ids with fake
+   UUIDs (`00000000-0000-4000-8000-xxxxxxxxxxxx`); UI labels (Recents, Projects, View all,
+   Scheduled, relative times) are kept.
+   1. Disable Nest for Claude and any other extension or userscript that touches claude.ai, then
+      reload the page.
+   2. Open a project page (a `https://claude.ai/project/<id>` URL, showing the project's "Recents"
+      list) with that same project expanded in the sidebar, paste the script in the devtools
+      console and save the download as `tests/fixtures/claude-dom/project-page.html`.
+   3. Open a conversation that belongs to no project (keep a project expanded in the sidebar),
+      run the script again and save it as `tests/fixtures/claude-dom/chat-page.html`.
+   4. Review both files for personal data before committing (names, emails, titles, ids in
+      `data-*` attributes or URLs); the script anonymises what it knows about, not everything.
+      Do not reformat the files: Biome ignores `tests/fixtures`.
+2. Run `pnpm test`, then update the failing assertions or add a test that reproduces the breakage
+   against the new fixture.
+3. Fix the selectors or detection logic **only in `src/shared/claude-dom/`**. If a fix seems to
+   need changes elsewhere, open an issue first: it usually means a DOM detail leaked out of that
+   module.
+4. Keep the old fixture (under another name) if the old markup can still be served, so both stay
+   supported.
 
 ## Translations
 
