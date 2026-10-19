@@ -10,9 +10,10 @@ src/
   entrypoints/            # WXT entrypoints (content script, options page)
   locales/                # en.yml, fr.yml (@wxt-dev/i18n)
   features/folders/
-    domain/               # pure TS: folder tree operations, no DOM, no browser APIs — unit tested
+    domain/               # pure TS: folder tree operations and ports, no DOM, no browser APIs
     storage/              # repository over browser.storage, versioned schema + migrations
-    ui/                   # rendering of folder sections and editors
+    ids/                  # folder id provider (crypto.randomUUID)
+    ui/                   # rendering of folder sections and floating panels
   shared/
     claude-dom/           # the ONLY code that knows claude.ai's DOM: selectors, sidebar/Recents
                           # detection, title extraction — tested against HTML fixtures
@@ -43,13 +44,16 @@ Dependencies point inward:
 
 ```
 entrypoints  ->  features/folders/ui  ->  features/folders/storage  ->  features/folders/domain
-                         |                                                   ^
-                         +----------------> shared/claude-dom                |
-                         +---------------------------------------------------+
+     |                   |                                                   ^
+     |                   +----------------> shared/claude-dom                |
+     |                   +---------------------------------------------------+
+     +-----------> features/folders/ids  ------------------------------------+
 ```
 
 - `domain` imports nothing from `storage`, `ui`, `shared/claude-dom`, WXT or `browser`.
 - `storage` depends on `domain` (types, migrations' target shapes) and on `browser.storage`.
+- `ids` implements the `FolderIdProvider` port of `domain` with `crypto.randomUUID()`; nothing
+  else calls `crypto.randomUUID()`. The UI only knows the port, so tests inject a sequential fake.
 - `ui` composes `domain`, `storage` and `shared/claude-dom`; it is the only layer that renders.
 - `entrypoints` only wire things together.
 - No cross-feature imports: code used by more than one feature goes to `shared/`.
@@ -155,10 +159,13 @@ needed by the rules above; tests use them to scope assertions.
 
 ## Folders UI
 
-`entrypoints/claude.content.ts` is the composition root: it builds `BrowserFoldersRepository` and
-`BrowserHideFiledSetting`, starts the UI with `startFoldersUi`, calls `sync()` on WXT's
-`wxt:locationchange` (claude.ai navigates client-side) and `stop()` on `ctx.onInvalidated`. The
-CSS (`ui/folders.css`) is imported there, so WXT injects it through the manifest.
+`entrypoints/claude.content.ts` is the composition root: it builds `BrowserFoldersRepository`,
+`BrowserHideFiledSetting` and `RandomUuidFolderIdProvider`, mounts the panel layer (below),
+starts the UI with `startFoldersUi`, calls `sync()` on WXT's `wxt:locationchange` (claude.ai
+navigates client-side) and `stop()` on `ctx.onInvalidated`. The section CSS (`ui/folders.css`) is
+imported there, so WXT injects it into the page through the manifest; the panel CSS
+(`ui/floating-panel.css`) is imported with `?inline` and injected only inside the panel layer's
+shadow root.
 
 `features/folders/ui/`:
 
@@ -169,21 +176,52 @@ CSS (`ui/folders.css`) is imported there, so WXT injects it through the manifest
   duplicate them; a mount whose anchor is gone is removed. Syncs run on DOM mutations (one
   `MutationObserver`, debounced), on navigation and on storage changes; no polling.
 - **Store** (`project-folders.store.ts`): loads and watches each displayed project through the
-  `FoldersRepository` port; user actions go through `apply`: a pure domain operation, then a save.
-  It lives in `ui/` because it is the UI's view of storage (cache, watches, change callback); the
-  domain stays synchronous and free of ports' async plumbing, and there is no separate application
-  layer.
+  `FoldersRepository` port; user actions go through `apply`: a pure domain operation, then a save
+  (it returns whether the operation was accepted). It lives in `ui/` because it is the UI's view
+  of storage (cache, watches, change callback); the domain stays synchronous and free of ports'
+  async plumbing, and there is no separate application layer.
 - **Views** (`folders-section.view.ts`, `folder-tree.view.ts`): pure rendering from a
   `ProjectFolders` with `childrenOf` and `countConversations`. A section is rendered again only
   when its inputs (tree, current conversation, heading classes) change, which also keeps the
   observer from reacting to our own DOM writes; keyboard focus is restored across re-renders.
+- **Row actions** (`row-actions.ts`): each row is wrapped in an `.nfc-item` with its action
+  buttons as siblings (a row is a button or a link, which cannot hold buttons). Folder rows offer
+  new sub-folder, add conversations, edit and delete; conversation rows rename (the title shown in
+  the folder only) and remove from folder; the sidebar header has a "New folder" icon button and
+  the project page header a "New folder" text button. Actions are shown on row `:hover` and
+  `:focus-within` (they stay focusable while transparent) and always under `@media (hover: none)`;
+  the count hides while they show. Each has an i18n accessible name and a 44px target on coarse
+  pointers; their clicks never reach the row (no toggle, no navigation).
+- **Folder actions** (`folder-actions.ts`): turns the action handlers into panels and domain
+  operations (`createFolder` with an id from the `FolderIdProvider`, `renameFolder`,
+  `setFolderAppearance`, `deleteFolder`, `renameConversation`, `unfileConversation`,
+  `fileConversation` + `openFolder`). Rejected operations (blank names) are ignored, never thrown.
+- **Floating panels** (`floating-panel.ts`): one reusable non-modal `role="dialog"`, named by its
+  visible title, one open at a time. It renders in the **panel layer**: a container inside a
+  shadow root created with WXT's `createShadowRootUi` (`isolateEvents` keeps keystrokes typed in a
+  panel from reaching claude.ai's shortcuts). It is placed 6px under its anchor, flipped above
+  when it would overflow the viewport and clamped 8px inside it (`panel-position.ts`, pure); its
+  background is the first opaque ancestor's of the anchor and its text color and font the
+  anchor's (`panel-theme.ts`), so it follows claude.ai's theme. Focus moves to its first control
+  on open; Escape and completing the panel close it and give focus back to the control that
+  opened it (found again by focus key, since sections re-render; with fallbacks such as the parent
+  folder after a delete); a pointer press outside closes it and leaves focus where the user
+  pressed. Panels: create folder and rename conversation (`text-field.panel.ts`), folder editor
+  with live name, emoji field and grid, palette with `aria-pressed` (`folder-editor.panel.ts`),
+  delete confirmation with Cancel focused (`delete-folder.panel.ts`), and the conversation adder
+  (`conversation-adder.panel.ts`).
+- **Adder candidates** (`conversation-candidates.ts`): the conversations claude.ai shows in the
+  native lists where the project's sections are mounted (sidebar project list, project page
+  Recents), not yet filed in the project, deduplicated, titled with `conversationTitle`. This is
+  the way to file conversations without drag and drop.
 - **Marks** (`filed-marks.ts`): in the native lists next to a section, filed conversations get
   `data-nfc-hidden` on their row (setting `hideFiled` on) or `data-nfc-filed` on their link (off).
 - `native-row-look.ts` copies the native row look into `--nfc-*` custom properties; it reads
   layout, so it is the only UI code that needs a rendered page and does nothing in test DOMs.
 
-`stop()` disconnects the observer, cancels the pending sync, ends every storage watch and removes
-the sections and every attribute set on claude.ai's nodes.
+`stop()` closes the open panel, disconnects the observer, cancels the pending sync, ends every
+storage watch and removes the sections and every attribute set on claude.ai's nodes; WXT removes
+the panel layer when the context is invalidated.
 
 ## Rendering rules
 
