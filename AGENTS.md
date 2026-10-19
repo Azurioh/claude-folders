@@ -18,7 +18,7 @@ Details: `docs/ARCHITECTURE.md`, `CONTRIBUTING.md`.
 - `src/features/folders/domain/`: pure TypeScript. Imports nothing from `storage`, `ui`,
   `shared/claude-dom`, WXT, `browser` or the DOM.
 - `src/features/folders/storage/`: repository over `browser.storage.local`; versioned schema,
-  pure migration functions, legacy TamperMonkey import (`claudeFolders.v1`).
+  pure migration functions.
 - `src/features/folders/ui/`: rendering only.
 - `src/shared/claude-dom/`: the ONLY code that knows claude.ai's DOM (selectors, detection, title
   extraction). DOM breakages are fixed here and nowhere else.
@@ -42,11 +42,13 @@ Details: `docs/ARCHITECTURE.md`, `CONTRIBUTING.md`.
 
 ## Testing
 
-- Vitest (`pnpm test`). Tests sit next to the code as `*.test.ts`.
+- Vitest (`pnpm test`). Tests live in `tests/` as `*.test.ts`, mirroring `src/`
+  (`src/features/folders/domain/x.ts` → `tests/features/folders/domain/x.test.ts`); import the
+  code under test through the `@/` alias.
 - `domain`: unit tests for every tree operation.
 - `storage`: tests for every migration, using WXT's `fakeBrowser`.
-- `shared/claude-dom`: tests against sanitized HTML fixtures of claude.ai; a DOM fix always updates
-  or adds a fixture.
+- `shared/claude-dom`: tests against sanitized HTML fixtures of claude.ai stored under
+  `tests/fixtures/`; a DOM fix always updates or adds a fixture.
 - No fake tests: a test must exercise real code.
 
 ## i18n

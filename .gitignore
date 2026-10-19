@@ -21,3 +21,6 @@ coverage/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Local tool artifacts
+.claude-flow/
