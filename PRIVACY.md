@@ -29,26 +29,31 @@ through your browser account and is never sent anywhere.
 
 ## Export your data
 
-1. Open the extension's settings page (right-click the extension, then **Options** / **Manage**).
-2. Open the developer tools on that page (`F12`, or right-click and **Inspect**).
-3. In the console, run:
+1. Click the extension's icon in the browser toolbar (pin it first if it is hidden in the
+   extensions menu).
+2. In **Backup**, click **Export backup** (on Firefox: **Export or import…**, then **Export
+   backup** in the tab that opens). Your browser saves a `nest-for-claude-backup-YYYY-MM-DD.json`
+   file on your device; it is not uploaded anywhere.
 
-   ```js
-   copy(JSON.stringify(await browser.storage.local.get(null), null, 2));
-   ```
-
-   On Chrome, replace `browser` with `chrome`. The JSON is now in your clipboard.
+The file holds your folders, the IDs and titles of the conversations you filed, the IDs of the
+projects they belong to and your display setting. **Import backup…** in the same place restores it,
+after asking you to confirm that it replaces your current folders.
 
 ## Delete your data
 
 - **Uninstalling the extension deletes all of its data.**
-- To delete the data but keep the extension, run in the same console:
+- To delete the data but keep the extension: click the extension's icon, then in **Danger zone**
+  click **Delete all data** and confirm. Every folder of every project and your settings are removed
+  from your browser.
 
-  ```js
-  await browser.storage.local.clear();
-  ```
+## Diagnostic
 
-  (On Chrome, replace `browser` with `chrome`.)
+**Copy diagnostic**, in the menu of the extension's icon, copies a text to paste into a bug
+report. It only leaves your browser if you paste it somewhere yourself. It contains the extension
+and browser versions (browser name and major version only), how many projects, folders and filed
+conversations are stored, your display setting, and, when a claude.ai tab is open, how many
+conversation and project links the extension detects there and which kind of page it is. It never
+contains conversation or project IDs, titles, folder names or conversation content.
 
 ## Changes
 

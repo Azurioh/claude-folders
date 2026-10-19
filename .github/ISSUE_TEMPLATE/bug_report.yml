@@ -64,5 +64,5 @@ body:
     id: diagnostic
     attributes:
       label: Diagnostic output
-      description: Errors from the browser console on claude.ai, or any diagnostic output the extension provides. Remove anything private.
+      description: "Click the extension icon → Copy diagnostic, then paste it here. Add errors from the browser console on claude.ai if any. Remove anything private."
       render: text
