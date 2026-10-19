@@ -71,6 +71,46 @@ entrypoints  ->  features/folders/ui  ->  features/folders/storage  ->  features
 
 The extension makes no network requests at any step.
 
+## claude.ai DOM adapter
+
+`shared/claude-dom` exposes pure functions over a root `ParentNode` and a `pathname` (they never
+read the global `document` or `location`, so tests feed them parsed fixtures): ids of links and of
+the current page, conversation titles, conversation rows, the project page's "Recents" block, the
+expanded sidebar projects, and a diagnostic of what was found. Every selector and pattern is in
+`selectors.ts`.
+
+### Anchors
+
+Anchors are structural, never Tailwind class names (they churn on every claude.ai release) and
+never layout APIs (`getBoundingClientRect`, `offsetHeight`: fragile, and absent from test DOMs).
+
+- **Conversation / project ids**: `a[href*="/chat/"]`, `a[href*="/project/"]` plus a UUID
+  pattern. URLs are claude.ai's public routes, the most stable contract. Ids are lowercased;
+  non-UUID hrefs (`/chat/new`) are ignored.
+- **The extension's own UI**: `OWN_UI_SELECTOR` (`.nfc-section`). Our own conversation links and
+  headings must never be mistaken for claude.ai's.
+- **Project page "Recents"**: the `main` landmark, then the first element whose own text is a
+  Recents label (EN/FR). `main` separates the content from the sidebar (an `aside`); it replaces the
+  legacy "rightmost heading" layout rule.
+- **Its list**: the closest ancestor of the heading holding conversation links (currently the
+  `section` around the `h2` and its table). The climb is bounded and never leaves `main`.
+- **Sidebar project**: a `[data-group-list]` block (its value is the project id) holding the project
+  link. Independent of row styling.
+- **Expanded sidebar project**: a `ul` inside that block. The nested conversation list only exists
+  while the project is expanded.
+- **Conversation row**: a bounded climb from the link that stops at an `li`, at the extension's UI
+  and below any ancestor holding another conversation or a project link. Works for the `li` rows of
+  projects, the `div` rows of the sidebar Recents and the `tr` rows of the project page Recents
+  without naming any of them.
+- **Conversation title**: the text nodes of `[data-row-label]` (sidebar rows), else of the link,
+  else of its row when the link is an empty overlay (project page Recents table). Text inside
+  `time`, `button` and `aria-hidden` elements is skipped, the rest is joined with spaces since
+  `innerText` is absent from test DOMs, and a trailing "Scheduled" badge and relative time (EN/FR)
+  are stripped.
+
+`data-testid` values (`sidebar`, `sidebar-projects`, `sidebar-recents`) exist too but are not
+needed by the rules above; tests use them to scope assertions.
+
 ## Storage
 
 `domain/folders.repository.ts` declares the `FoldersRepository` port (`load`, `save`, `watch`);
