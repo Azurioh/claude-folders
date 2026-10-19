@@ -36,14 +36,14 @@ Requirements: [Node.js](https://nodejs.org/) (version in [`.nvmrc`](.nvmrc)) and
 git clone https://github.com/Azurioh/nest-for-claude.git
 cd nest-for-claude
 pnpm install
-pnpm build          # Chrome  -> .output/chrome-mv3
-pnpm build:firefox  # Firefox -> .output/firefox-mv3
+pnpm build          # Chrome  -> dist/chrome-mv3
+pnpm build:firefox  # Firefox -> dist/firefox-mv3
 ```
 
 - **Chrome**: open `chrome://extensions`, enable **Developer mode**, click **Load unpacked** and
-  select `.output/chrome-mv3`.
+  select `dist/chrome-mv3`.
 - **Firefox**: open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and
-  select `.output/firefox-mv3/manifest.json`.
+  select `dist/firefox-mv3/manifest.json`.
 
 ## Development quick start
 
@@ -79,7 +79,7 @@ pnpm install
 pnpm zip:firefox
 ```
 
-This produces the extension zip and a sources zip in `.output/`; the build output is identical to
+This produces the extension zip and a sources zip in `dist/`; the build output is identical to
 `pnpm build:firefox`.
 
 ## License
