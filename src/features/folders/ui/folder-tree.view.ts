@@ -14,12 +14,29 @@ import {
 import { createElement } from '@/features/folders/ui/element';
 import { FOCUS_KEY_ATTRIBUTE } from '@/features/folders/ui/focus-key';
 import { createIcon } from '@/features/folders/ui/icons';
+import { createRowItem, type RowAction } from '@/features/folders/ui/row-actions';
 
 const FOLDER_ICON_SIZE = 16;
 const CHEVRON_SIZE = 12;
 
+/** Reactions of a rendered folder tree to its row actions; each opens a panel or edits the tree. */
+export interface FolderEditingHandlers {
+  /** "New folder" (root) or "New sub-folder" was pressed. */
+  onCreateFolder(params: { parentId: FolderId | null; anchor: HTMLElement }): void;
+  /** "Add conversations" was pressed on a folder. */
+  onAddConversations(params: { folderId: FolderId; anchor: HTMLElement }): void;
+  /** "Edit" was pressed on a folder. */
+  onEditFolder(params: { folderId: FolderId; anchor: HTMLElement }): void;
+  /** "Delete" was pressed on a folder. */
+  onDeleteFolder(params: { folderId: FolderId; anchor: HTMLElement }): void;
+  /** "Rename" was pressed on a conversation. */
+  onRenameConversation(params: { conversationId: ConversationId; anchor: HTMLElement }): void;
+  /** "Remove from folder" was pressed on a conversation. */
+  onUnfileConversation(params: { conversationId: ConversationId; folderId: FolderId }): void;
+}
+
 /** Reactions of a rendered folder tree to user actions. */
-export interface FolderTreeHandlers {
+export interface FolderTreeHandlers extends FolderEditingHandlers {
   /** A folder row was activated (click, Enter or Space). */
   onToggleFolder(folderId: FolderId): void;
   /** A conversation link was clicked; the handler decides how to navigate. */
@@ -112,6 +129,45 @@ function folderRow(params: { context: TreeContext; folder: Folder }): HTMLButton
   return row;
 }
 
+function folderActions(params: { context: TreeContext; folder: Folder }): RowAction[] {
+  const { handlers } = params.context;
+  const { id, name } = params.folder;
+  return [
+    {
+      icon: 'plus',
+      label: i18n.t('actionNewSubfolder', [name]),
+      focusKey: `new-subfolder:${id}`,
+      onActivate: (anchor) => {
+        handlers.onCreateFolder({ parentId: id, anchor });
+      },
+    },
+    {
+      icon: 'listPlus',
+      label: i18n.t('actionAddConversations', [name]),
+      focusKey: `add-conversations:${id}`,
+      onActivate: (anchor) => {
+        handlers.onAddConversations({ folderId: id, anchor });
+      },
+    },
+    {
+      icon: 'pencil',
+      label: i18n.t('actionEditFolder', [name]),
+      focusKey: `edit-folder:${id}`,
+      onActivate: (anchor) => {
+        handlers.onEditFolder({ folderId: id, anchor });
+      },
+    },
+    {
+      icon: 'close',
+      label: i18n.t('actionDeleteFolder', [name]),
+      focusKey: `delete-folder:${id}`,
+      onActivate: (anchor) => {
+        handlers.onDeleteFolder({ folderId: id, anchor });
+      },
+    },
+  ];
+}
+
 function folderGroup(params: { context: TreeContext; folder: Folder }): HTMLElement {
   const { context, folder } = params;
   const children = renderChildren({ context, parentId: folder.id });
@@ -141,7 +197,13 @@ function folderNode(params: { context: TreeContext; folder: Folder }): HTMLEleme
     document: context.document,
     tag: 'div',
     className: 'nfc-node',
-    children: [folderRow({ context, folder })],
+    children: [
+      createRowItem({
+        document: context.document,
+        row: folderRow({ context, folder }),
+        actions: folderActions({ context, folder }),
+      }),
+    ],
   });
   if (folder.color !== undefined) {
     node.style.setProperty('--nfc-accent', folder.color);
@@ -150,6 +212,33 @@ function folderNode(params: { context: TreeContext; folder: Folder }): HTMLEleme
     node.append(folderGroup({ context, folder }));
   }
   return node;
+}
+
+function conversationActions(params: {
+  context: TreeContext;
+  conversationId: ConversationId;
+  conversation: FiledConversation;
+}): RowAction[] {
+  const { context, conversationId, conversation } = params;
+  const { handlers } = context;
+  return [
+    {
+      icon: 'pencil',
+      label: i18n.t('actionRenameConversation', [conversation.title]),
+      focusKey: `rename-conversation:${conversationId}`,
+      onActivate: (anchor) => {
+        handlers.onRenameConversation({ conversationId, anchor });
+      },
+    },
+    {
+      icon: 'close',
+      label: i18n.t('actionUnfileConversation', [conversation.title]),
+      focusKey: `unfile-conversation:${conversationId}`,
+      onActivate: () => {
+        handlers.onUnfileConversation({ conversationId, folderId: conversation.folderId });
+      },
+    },
+  ];
 }
 
 function conversationRow(params: {
@@ -190,7 +279,12 @@ function renderChild(params: { context: TreeContext; child: FolderChild }): HTML
   if (child.kind === 'folder') {
     return folderNode({ context, folder: child.folder });
   }
-  return conversationRow({ context, conversationId: child.id, conversation: child.conversation });
+  const filed = { context, conversationId: child.id, conversation: child.conversation };
+  return createRowItem({
+    document: context.document,
+    row: conversationRow(filed),
+    actions: conversationActions(filed),
+  });
 }
 
 function renderChildren(params: {

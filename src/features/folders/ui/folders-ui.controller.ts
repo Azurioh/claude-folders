@@ -1,8 +1,11 @@
+import type { FolderIdProvider } from '@/features/folders/domain/folder-id.provider';
 import type { ProjectFolders, Section } from '@/features/folders/domain/folders.model';
 import { toggleFolderOpen, toggleSection } from '@/features/folders/domain/folders.operations';
 import type { FoldersRepository, ProjectId } from '@/features/folders/domain/folders.repository';
 import type { BrowserHideFiledSetting } from '@/features/folders/storage/browser-hide-filed.setting';
 import { clearFiledMarks, markFiled } from '@/features/folders/ui/filed-marks';
+import { FloatingPanels } from '@/features/folders/ui/floating-panel';
+import { FolderActions } from '@/features/folders/ui/folder-actions';
 import {
   type FoldersSectionHandlers,
   renderFoldersSection,
@@ -48,7 +51,7 @@ interface Mount {
 export interface FoldersUi {
   /** Mounts, updates and removes the sections to match the page; safe to call at any time. */
   sync(): void;
-  /** Removes every section and mark and stops observing the page and storage. */
+  /** Closes the open panel, removes every section and mark and stops observing the page and storage. */
   stop(): void;
 }
 
@@ -70,6 +73,8 @@ class FoldersUiController implements FoldersUi {
   private readonly document: Document;
   private readonly pathname: () => string;
   private readonly store: ProjectFoldersStore;
+  private readonly panels: FloatingPanels;
+  private readonly actions: FolderActions;
   private readonly mounts = new Map<string, Mount>();
   private readonly observer: MutationObserver;
   private readonly unwatchHideFiled: () => void;
@@ -82,6 +87,8 @@ class FoldersUiController implements FoldersUi {
     pathname: () => string;
     repository: FoldersRepository;
     hideFiled: HideFiledSource;
+    panelLayer: HTMLElement;
+    folderIds: FolderIdProvider;
   }) {
     this.document = params.document;
     this.pathname = params.pathname;
@@ -90,6 +97,13 @@ class FoldersUiController implements FoldersUi {
       onChange: () => {
         this.sync();
       },
+    });
+    this.panels = new FloatingPanels(params.panelLayer);
+    this.actions = new FolderActions({
+      store: this.store,
+      panels: this.panels,
+      folderIds: params.folderIds,
+      listsOf: (projectId) => this.listsOf(projectId),
     });
     this.observer = new MutationObserver(() => {
       this.scheduleSync();
@@ -128,6 +142,7 @@ class FoldersUiController implements FoldersUi {
 
   stop(): void {
     this.stopped = true;
+    this.panels.close();
     this.observer.disconnect();
     clearTimeout(this.syncTimer);
     this.store.dispose();
@@ -214,7 +229,7 @@ class FoldersUiController implements FoldersUi {
       projectId,
       section,
       element,
-      handlers: this.handlersFor(projectId),
+      handlers: this.handlersFor({ projectId, section: element }),
       list,
       headingClass: '',
       rendered: null,
@@ -224,8 +239,20 @@ class FoldersUiController implements FoldersUi {
     return mount;
   }
 
-  private handlersFor(projectId: ProjectId): FoldersSectionHandlers {
+  /** The native lists next to which the sections of a project are currently mounted. */
+  private listsOf(projectId: ProjectId): HTMLElement[] {
+    return [...this.mounts.values()]
+      .filter((mount) => mount.projectId === projectId && mount.list.isConnected)
+      .map((mount) => mount.list);
+  }
+
+  private handlersFor(params: {
+    projectId: ProjectId;
+    section: HTMLElement;
+  }): FoldersSectionHandlers {
+    const { projectId } = params;
     return {
+      ...this.actions.handlersFor(params),
       onToggleFolder: (folderId) => {
         this.store.apply({
           projectId,
@@ -291,6 +318,9 @@ class FoldersUiController implements FoldersUi {
  * @param params.pathname - Reads the current `location.pathname`.
  * @param params.repository - Where folder trees are read, watched and saved.
  * @param params.hideFiled - The "hide filed conversations" setting.
+ * @param params.panelLayer - Where floating panels are rendered: a container inside a shadow root,
+ *   so claude.ai's styles and the panels' do not collide.
+ * @param params.folderIds - Generates the ids of new folders.
  * @returns The running UI; call `stop` when the content script is invalidated.
  */
 export function startFoldersUi(params: {
@@ -298,6 +328,8 @@ export function startFoldersUi(params: {
   pathname: () => string;
   repository: FoldersRepository;
   hideFiled: HideFiledSource;
+  panelLayer: HTMLElement;
+  folderIds: FolderIdProvider;
 }): FoldersUi {
   const ui = new FoldersUiController(params);
   ui.sync();

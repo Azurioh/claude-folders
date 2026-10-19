@@ -34,3 +34,20 @@ export function replaceKeepingFocus(params: {
     keyedElementOf({ container, key })?.focus();
   }
 }
+
+/**
+ * Focuses the first control of a container carrying one of the given focus keys, e.g. the button
+ * a panel was opened from, rendered again since, or a fallback when that control is gone.
+ * @param params.container - Where the controls are searched.
+ * @param params.keys - Focus keys, in order of preference.
+ */
+export function focusFirstKeyed(params: { container: Element; keys: readonly string[] }): void {
+  const { container, keys } = params;
+  for (const key of keys) {
+    const element = keyedElementOf({ container, key });
+    if (element !== null) {
+      element.focus();
+      return;
+    }
+  }
+}

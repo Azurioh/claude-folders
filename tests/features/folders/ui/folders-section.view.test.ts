@@ -1,6 +1,8 @@
 // @vitest-environment happy-dom
 
 import { stubI18n } from '@@/tests/features/folders/ui/test-doubles';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyProject, type ProjectFolders } from '@/features/folders/domain/folders.model';
 import {
@@ -27,7 +29,44 @@ function sampleProject(): ProjectFolders {
 }
 
 function handlers(): FoldersSectionHandlers {
-  return { onToggleFolder: vi.fn(), onToggleSection: vi.fn(), onOpenConversation: vi.fn() };
+  return {
+    onToggleFolder: vi.fn(),
+    onToggleSection: vi.fn(),
+    onOpenConversation: vi.fn(),
+    onCreateFolder: vi.fn(),
+    onAddConversations: vi.fn(),
+    onEditFolder: vi.fn(),
+    onDeleteFolder: vi.fn(),
+    onRenameConversation: vi.fn(),
+    onUnfileConversation: vi.fn(),
+  };
+}
+
+function render(params: {
+  section: 'sidebar' | 'projectPage';
+  spies: FoldersSectionHandlers;
+}): HTMLElement {
+  const root = container();
+  renderFoldersSection({
+    container: root,
+    section: params.section,
+    state: sampleProject(),
+    currentChatId: null,
+    headingClass: '',
+    handlers: params.spies,
+  });
+  return root;
+}
+
+function actionsOf(row: Element): HTMLButtonElement[] {
+  const item = row.closest('.nfc-item');
+  return [...(item?.querySelectorAll<HTMLButtonElement>(':scope > .nfc-actions > button') ?? [])];
+}
+
+function clickAction(button: HTMLButtonElement | undefined): MouseEvent {
+  const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+  button?.dispatchEvent(event);
+  return event;
 }
 
 function container(): HTMLElement {
@@ -276,5 +315,119 @@ describe('renderFoldersSection', () => {
 
     expect(root.querySelectorAll('.nfc-header')).toHaveLength(1);
     expect(root.querySelectorAll('.nfc-folder')).toHaveLength(3);
+  });
+
+  describe('actions', () => {
+    it('gives each folder row named actions: new sub-folder, add conversations, edit, delete', () => {
+      const root = render({ section: 'sidebar', spies: handlers() });
+
+      const actions = actionsOf(folderRow({ root, name: 'Work' }));
+
+      expect(actions.map((action) => action.getAttribute('aria-label'))).toEqual([
+        'actionNewSubfolder(Work)',
+        'actionAddConversations(Work)',
+        'actionEditFolder(Work)',
+        'actionDeleteFolder(Work)',
+      ]);
+      for (const action of actions) {
+        expect(action.type).toBe('button');
+        expect(action.classList.contains('nfc-action')).toBe(true);
+        expect(action.title).toBe(action.getAttribute('aria-label'));
+      }
+    });
+
+    it('gives each conversation row named actions: rename, remove from folder', () => {
+      const root = render({ section: 'sidebar', spies: handlers() });
+
+      const link = root.querySelector('a.nfc-conv');
+      const actions = link === null ? [] : actionsOf(link);
+
+      expect(actions.map((action) => action.getAttribute('aria-label'))).toEqual([
+        'actionRenameConversation(Alpha chat)',
+        'actionUnfileConversation(Alpha chat)',
+      ]);
+    });
+
+    it('keeps actions out of the row itself, so the row stays one control', () => {
+      const root = render({ section: 'sidebar', spies: handlers() });
+
+      for (const row of root.querySelectorAll('.nfc-row')) {
+        expect(row.querySelector('button')).toBeNull();
+        expect(row.parentElement?.classList.contains('nfc-item')).toBe(true);
+      }
+    });
+
+    it('hands folder actions to their handler with the pressed button, without toggling', () => {
+      const spies = handlers();
+      const root = render({ section: 'sidebar', spies });
+      const [newSubfolder, add, edit, remove] = actionsOf(folderRow({ root, name: 'Work' }));
+
+      const event = clickAction(newSubfolder);
+      clickAction(add);
+      clickAction(edit);
+      clickAction(remove);
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(spies.onCreateFolder).toHaveBeenCalledWith({ parentId: 'work', anchor: newSubfolder });
+      expect(spies.onAddConversations).toHaveBeenCalledWith({ folderId: 'work', anchor: add });
+      expect(spies.onEditFolder).toHaveBeenCalledWith({ folderId: 'work', anchor: edit });
+      expect(spies.onDeleteFolder).toHaveBeenCalledWith({ folderId: 'work', anchor: remove });
+      expect(spies.onToggleFolder).not.toHaveBeenCalled();
+    });
+
+    it('hands conversation actions to their handler without opening the conversation', () => {
+      const spies = handlers();
+      const root = render({ section: 'sidebar', spies });
+      const link = root.querySelector('a.nfc-conv');
+      const [rename, unfile] = link === null ? [] : actionsOf(link);
+
+      clickAction(rename);
+      clickAction(unfile);
+
+      expect(spies.onRenameConversation).toHaveBeenCalledWith({
+        conversationId: CHAT_A,
+        anchor: rename,
+      });
+      expect(spies.onUnfileConversation).toHaveBeenCalledWith({
+        conversationId: CHAT_A,
+        folderId: 'work',
+      });
+      expect(spies.onOpenConversation).not.toHaveBeenCalled();
+    });
+
+    it('offers a "New folder" icon button next to the sidebar header', () => {
+      const spies = handlers();
+      const root = render({ section: 'sidebar', spies });
+      const header = root.querySelector('button.nfc-header');
+      const [create] = header === null ? [] : actionsOf(header);
+
+      clickAction(create);
+
+      expect(create?.getAttribute('aria-label')).toBe('actionNewFolder');
+      expect(spies.onCreateFolder).toHaveBeenCalledWith({ parentId: null, anchor: create });
+      expect(spies.onToggleSection).not.toHaveBeenCalled();
+    });
+
+    it('offers an always visible "New folder" text button on the project page', () => {
+      const spies = handlers();
+      const root = render({ section: 'projectPage', spies });
+      const create = root.querySelector<HTMLButtonElement>('button.nfc-new');
+
+      create?.click();
+
+      expect(create?.textContent).toBe('actionNewFolder');
+      expect(spies.onCreateFolder).toHaveBeenCalledWith({ parentId: null, anchor: create });
+    });
+
+    it('shows actions on hover and keyboard focus, and always on devices without hover', () => {
+      const css = readFileSync(
+        join(process.cwd(), 'src/features/folders/ui/folders.css'),
+        'utf8',
+      ).replaceAll(/\s+/g, ' ');
+
+      expect(css).toContain('.nfc-item:hover > .nfc-actions');
+      expect(css).toContain('.nfc-item:focus-within > .nfc-actions');
+      expect(css).toMatch(/@media \(hover: none\) \{[^}]*\.nfc-actions/);
+    });
   });
 });

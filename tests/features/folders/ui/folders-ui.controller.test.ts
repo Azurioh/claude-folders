@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 
 import {
+  createPanelLayer,
   flushPromises,
   InMemoryFoldersRepository,
   InMemoryHideFiledSetting,
+  SequentialFolderIdProvider,
   showFixture,
   stubI18n,
 } from '@@/tests/features/folders/ui/test-doubles';
@@ -90,7 +92,14 @@ describe('startFoldersUi', () => {
   async function start(params: { page: 'project-page' | 'chat-page'; path: string }) {
     showFixture(params.page);
     pathname = params.path;
-    ui = startFoldersUi({ document, pathname: () => pathname, repository, hideFiled });
+    ui = startFoldersUi({
+      document,
+      pathname: () => pathname,
+      repository,
+      hideFiled,
+      panelLayer: createPanelLayer(),
+      folderIds: new SequentialFolderIdProvider(),
+    });
     await flushPromises();
   }
 
@@ -178,7 +187,14 @@ describe('startFoldersUi', () => {
       const parent = list.parentElement;
       list.remove();
       pathname = CHAT_PAGE;
-      ui = startFoldersUi({ document, pathname: () => pathname, repository, hideFiled });
+      ui = startFoldersUi({
+        document,
+        pathname: () => pathname,
+        repository,
+        hideFiled,
+        panelLayer: createPanelLayer(),
+        folderIds: new SequentialFolderIdProvider(),
+      });
       await flushPromises();
       expect(sections()).toHaveLength(0);
 
