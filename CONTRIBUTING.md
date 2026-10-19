@@ -15,6 +15,9 @@ pnpm install   # also runs `wxt prepare` and installs the lefthook git hooks
 pnpm dev       # opens Chrome with the extension loaded and hot reload
 ```
 
+To try it, sign in to claude.ai in the opened browser and open a project page or expand a project
+in the sidebar: a "Folders" section appears there.
+
 ## Scripts
 
 | Script               | What it does                                                      |
