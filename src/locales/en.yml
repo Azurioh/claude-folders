@@ -41,7 +41,13 @@ colorBlue: Blue
 colorViolet: Violet
 colorPink: Pink
 colorTaupe: Taupe
-deleteFolderConfirm: "Delete “$1”? Its content moves up one level."
+deleteFolderConfirm:
+  0: "Delete “$1”?"
+  1: "Delete “$1” and its sub-folder?"
+  n: "Delete “$1” and its $2 sub-folders?"
+deleteFolderUnfiledConversations:
+  1: Its conversation will go back to your claude.ai lists.
+  n: Its $1 conversations will go back to your claude.ai lists.
 renameConversationHint: Only the title shown in your folders changes.
 adderEmpty: No conversation available
 adderHint: Lists unfiled conversations shown in the page or sidebar.

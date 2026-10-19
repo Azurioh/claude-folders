@@ -16,6 +16,7 @@ import {
   setFolderAppearance,
   unfileConversation,
 } from '@/features/folders/domain/folders.operations';
+import { deletionImpact } from '@/features/folders/domain/folders.queries';
 import type { ProjectId } from '@/features/folders/domain/folders.repository';
 import { conversationAdderPanel } from '@/features/folders/ui/conversation-adder.panel';
 import {
@@ -227,8 +228,9 @@ export class FolderActions {
     anchor: HTMLElement;
   }): void {
     const { scope, folderId, anchor } = params;
-    const folder = this.findFolder({ scope, folderId });
-    if (folder === null) {
+    const state = this.store.find(scope.projectId);
+    const folder = state === null ? undefined : getFolder({ state, folderId });
+    if (state === null || folder === undefined) {
       return;
     }
     const parentKeys = folder.parentId === null ? [] : [folderRowFocusKey(folder.parentId)];
@@ -240,6 +242,7 @@ export class FolderActions {
       render: deleteFolderPanel({
         document: anchor.ownerDocument,
         folderName: folder.name,
+        impact: deletionImpact({ state, folderId }),
         onConfirm: () => {
           this.store.apply({
             projectId: scope.projectId,

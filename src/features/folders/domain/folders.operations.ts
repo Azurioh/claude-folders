@@ -15,7 +15,7 @@ import {
   type ProjectFolders,
   type Section,
 } from '@/features/folders/domain/folders.model';
-import { isInside } from '@/features/folders/domain/folders.queries';
+import { isInside, subtreeOf } from '@/features/folders/domain/folders.queries';
 
 export type RejectionReason =
   | 'empty-name'
@@ -146,8 +146,8 @@ export function setFolderAppearance(params: {
 }
 
 /**
- * Deletes a folder without losing its content: its sub-folders and conversations move up one
- * level, to the deleted folder's parent. Conversations of a deleted root folder become unfiled.
+ * Deletes a folder together with all of its sub-folders, at any depth. The conversations filed in
+ * any of them become unfiled, so they show again in claude.ai's own lists.
  * @param params.state - The project to update.
  * @param params.folderId - The folder to delete.
  * @returns The updated project, or `folder-not-found`.
@@ -157,28 +157,17 @@ export function deleteFolder(params: {
   folderId: FolderId;
 }): OperationResult {
   const { state, folderId } = params;
-  const deleted = getFolder({ state, folderId });
-  if (deleted === undefined) {
+  if (getFolder({ state, folderId }) === undefined) {
     return rejected('folder-not-found');
   }
+  const deleted = subtreeOf({ state, folderId });
   // Object.fromEntries defines own properties, so an id such as `__proto__` stays a plain entry.
   const folders = Object.fromEntries(
-    Object.entries(state.folders)
-      .filter(([id]) => id !== folderId)
-      .map(([id, folder]): [FolderId, Folder] => [
-        id,
-        folder.parentId === folderId ? { ...folder, parentId: deleted.parentId } : folder,
-      ]),
+    Object.entries(state.folders).filter(([id]) => !deleted.has(id)),
   );
-  const { parentId } = deleted;
   const conversations = Object.fromEntries(
-    Object.entries(state.conversations).flatMap(
-      ([id, conversation]): [ConversationId, FiledConversation][] => {
-        if (conversation.folderId !== folderId) {
-          return [[id, conversation]];
-        }
-        return parentId === null ? [] : [[id, { ...conversation, folderId: parentId }]];
-      },
+    Object.entries(state.conversations).filter(
+      ([, conversation]) => !deleted.has(conversation.folderId),
     ),
   );
   return accepted({ ...state, folders, conversations });
