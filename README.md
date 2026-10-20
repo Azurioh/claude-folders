@@ -12,6 +12,10 @@
 Nest for Claude is an open-source browser extension for Chrome and Firefox (Manifest V3) that adds
 folders and sub-folders of conversations, per project, to the claude.ai sidebar and project page.
 
+<p align="center">
+  <img src="docs/store/2560x1600/1-nested-folders.png" width="800" alt="A claude.ai project page with a Marketing folder containing a Launch sub-folder and conversations">
+</p>
+
 > [!NOTE]
 > Nest for Claude is an independent project. It is **not affiliated with, endorsed by or sponsored
 > by Anthropic**. "Claude" is a trademark of Anthropic, PBC, used here only to describe what the
