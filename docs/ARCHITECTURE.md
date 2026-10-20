@@ -7,7 +7,8 @@ Chrome and Firefox with Manifest V3 from a single code base.
 
 ```
 src/
-  entrypoints/            # WXT entrypoints (content script, action popup, Firefox backup page)
+  entrypoints/            # WXT entrypoints (background, content script, action popup, Firefox
+                          # backup page)
   locales/                # en.yml, fr.yml (@wxt-dev/i18n)
   features/folders/
     domain/               # pure TS: folder tree operations and ports, no DOM, no browser APIs
@@ -16,6 +17,7 @@ src/
     backup/               # backup file format: serialization, Zod validation, size-checked reading
     ui/                   # rendering of folder sections and floating panels on claude.ai
     popup/                # rendering of the toolbar popup and of the backup page
+  features/toolbar-action/ # keeps the toolbar action enabled on claude.ai tabs only
   shared/
     claude-dom/           # the ONLY code that knows claude.ai's DOM: selectors, sidebar/Recents
                           # detection, title extraction — tested against HTML fixtures
@@ -52,6 +54,8 @@ entrypoints  ->  features/folders/ui  ->  features/folders/storage  ->  features
      +-----------> features/folders/ids  ------------------------------------+
      |
      +-----------> features/folders/popup -> features/folders/backup -> storage, domain
+     |
+     +-----------> features/toolbar-action
 ```
 
 - `domain` imports nothing from `storage`, `ui`, `shared/claude-dom`, WXT or `browser`.
@@ -64,6 +68,7 @@ entrypoints  ->  features/folders/ui  ->  features/folders/storage  ->  features
 - `popup` renders the toolbar popup and the backup page; it only knows the
   `FoldersSnapshotStore` port, the setting and injected browser functions (download, opening the
   backup page).
+- `toolbar-action` only knows the injected `action` and `tabs` APIs.
 - `entrypoints` only wire things together.
 - No cross-feature imports: code used by more than one feature goes to `shared/`.
 - Imports use the `@/` alias (`@/features/folders/domain/...`), never `../../`.
@@ -219,6 +224,28 @@ scrolling), so the first Tab reaches the first control.
 - **Danger zone**: kept quiet (outlined, last section); "Delete all data" with the same inline
   confirmation, then `FoldersSnapshotStore.clear`.
 - **Footer**: the source code link and "Not affiliated with Anthropic".
+
+### Active on claude.ai only
+
+The action (icon and popup) is enabled on claude.ai tabs only; elsewhere the icon is greyed out
+and clicking it opens nothing (`action.disable` stops both the popup and `action.onClicked`, in
+Chrome and Firefox). The background entrypoint wires `browser.action` and `browser.tabs` into
+`startToolbarActionScope` (`features/toolbar-action/action-scope.ts`), without the `tabs`
+permission:
+
+- A tab's `url` is only exposed for pages the extension has a host permission on, so a tab is a
+  claude.ai tab when its URL is defined, `https:` and on the `claude.ai` hostname
+  (`isClaudeUrl`); an undefined URL (any other site, or Firefox with the host permission not
+  granted) reads as "not claude.ai".
+- Every `tabs.onUpdated` event re-applies the tab's state from its URL (`enable(tabId)` or
+  `disable(tabId)`). This covers full and in-page navigations, in both directions, whatever the
+  browser does with per-tab action state on navigation. Its listener is registered synchronously
+  so the event waking the background is not missed.
+- On every background start (install, update, browser start, Chrome service worker restart) the
+  action is disabled globally, the default for new tabs, then every open tab (`tabs.query({})`) is
+  re-applied. Per-tab state wins over the global one, so claude.ai tabs open after an install or
+  an update are enabled without a reload, and a worker restart greys nothing.
+- A per-tab call on a tab closed meanwhile rejects; the rejection is dropped.
 
 ### Firefox: backups in a tab
 
