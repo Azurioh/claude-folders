@@ -2,12 +2,16 @@
   <img src="docs/brand/icon-512.png" width="128" height="128" alt="Nest for Claude logo: folders in a bird's nest">
 </p>
 
-# Nest for Claude
+<h1 align="center">Nest for Claude</h1>
 
-> Nested folders for your claude.ai conversations — organized per project, stored only in your browser.
+<p align="center">
+  Nested folders for your claude.ai conversations — organized per project, stored only in your browser.
+</p>
 
-[![CI](https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml/badge.svg)](https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml"><img src="https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+</p>
 
 Nest for Claude is an open-source browser extension for Chrome and Firefox (Manifest V3) that adds
 folders and sub-folders of conversations, per project, to the claude.ai sidebar and project page.
