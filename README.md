@@ -2,13 +2,14 @@
   <img src="docs/brand/icon-512.png" width="128" height="128" alt="Nest for Claude logo: folders in a bird's nest">
 </p>
 
-<h1 align="center">Nest for Claude</h1>
+# Nest for Claude
+
+> Nested folders for your claude.ai conversations — organized per project, stored only in your browser.
 
 <p align="center">
-  Nested folders for your claude.ai conversations — organized per project, stored only in your browser.
-</p>
-
-<p align="center">
+  <a href="#install"><img src="https://img.shields.io/badge/Chrome_Web_Store-coming_soon-lightgrey?logo=googlechrome&logoColor=white" alt="Chrome Web Store: coming soon"></a>
+  <a href="#install"><img src="https://img.shields.io/badge/Firefox_Add--ons-coming_soon-lightgrey?logo=firefoxbrowser&logoColor=white" alt="Firefox Add-ons: coming soon"></a>
+  <br>
   <a href="https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml"><img src="https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 </p>
