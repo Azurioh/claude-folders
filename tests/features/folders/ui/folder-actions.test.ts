@@ -101,6 +101,7 @@ describe('folder actions', () => {
       panelLayer: layer,
       folderIds: new SequentialFolderIdProvider(),
       now: () => 0,
+      assign: vi.fn(),
     });
     await flushPromises();
   }

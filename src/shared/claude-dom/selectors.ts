@@ -28,6 +28,14 @@ export const PROJECT_PATHNAME_PATTERN = new RegExp(`^/project/(${UUID})${UUID_EN
 export const MAIN_SELECTOR = 'main';
 
 /**
+ * The message composer (an editable `role="textbox"`), searched inside `MAIN_SELECTOR`: on a
+ * project page it starts a new session of that project, on a chat page it answers the chat.
+ */
+export const COMPOSER_SELECTOR = '[data-testid="chat-input"]';
+/** The composer's frame around its field, attachments and send button. */
+export const COMPOSER_FRAME_SELECTOR = 'fieldset';
+
+/**
  * One sidebar project: holds the project link and, while the project is expanded, the nested
  * list of its conversations. Its value is the project id.
  */

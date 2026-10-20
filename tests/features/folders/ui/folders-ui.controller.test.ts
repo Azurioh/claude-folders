@@ -124,6 +124,7 @@ describe('startFoldersUi', () => {
       panelLayer: createPanelLayer(),
       folderIds: new SequentialFolderIdProvider(),
       now: () => 0,
+      assign: vi.fn(),
     });
     await flushPromises();
   }
@@ -220,6 +221,7 @@ describe('startFoldersUi', () => {
         panelLayer: createPanelLayer(),
         folderIds: new SequentialFolderIdProvider(),
         now: () => 0,
+        assign: vi.fn(),
       });
       await flushPromises();
       expect(sections()).toHaveLength(0);

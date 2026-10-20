@@ -92,8 +92,8 @@ The extension makes no network requests at any step.
 `shared/claude-dom` exposes pure functions over a root `ParentNode` and a `pathname` (they never
 read the global `document` or `location`, so tests feed them parsed fixtures): ids of links and of
 the current page, conversation titles, conversation rows, the project page's "Recents" block, the
-expanded sidebar projects, and a diagnostic of what was found. Every selector and pattern is in
-`selectors.ts`.
+expanded sidebar projects, the composer, the project of a chat page, and a diagnostic of what was
+found. Every selector and pattern is in `selectors.ts`.
 
 ### Anchors
 
@@ -110,6 +110,11 @@ never layout APIs (`getBoundingClientRect`, `offsetHeight`: fragile, and absent 
   legacy "rightmost heading" layout rule.
 - **Its list**: the closest ancestor of the heading holding conversation links (currently the
   `section` around the `h2` and its table). The climb is bounded and never leaves `main`.
+- **Composer**: `[data-testid="chat-input"]` (an editable `role="textbox"`) inside `main`; its
+  `fieldset` ancestor frames it with its attachments and send button. On a project page it starts
+  a new session of that project.
+- **Chat page project**: the only native project link inside `main`, the header breadcrumb
+  (sidebar project links are in the `aside`; a project page's `main` holds none).
 - **Sidebar project**: a `[data-group-list]` block (its value is the project id) holding the project
   link. Independent of row styling.
 - **Expanded sidebar project**: a `ul` inside that block. The nested conversation list only exists
@@ -125,7 +130,8 @@ never layout APIs (`getBoundingClientRect`, `offsetHeight`: fragile, and absent 
   are stripped.
 
 `data-testid` values (`sidebar`, `sidebar-projects`, `sidebar-recents`) exist too but are not
-needed by the rules above; tests use them to scope assertions.
+needed by the rules above; tests use them to scope assertions. The composer is the exception: its
+field has no landmark or route of its own, so `chat-input` is its anchor.
 
 ## Storage
 
@@ -278,8 +284,9 @@ shadow root.
   observer from reacting to our own DOM writes; keyboard focus is restored across re-renders.
 - **Row actions** (`row-actions.ts`): each row is wrapped in an `.nfc-item` with its action
   buttons as siblings (a row is a button or a link, which cannot hold buttons). Folder rows offer
-  new sub-folder, add conversations, move to, edit and delete; conversation rows move to, rename
-  (the title shown in the folder only) and remove from folder; the sidebar header has a "New folder" icon button and
+  new session in this folder (`+`), new sub-folder (folder-plus icon), add conversations, edit and
+  delete; conversation rows rename (the title shown in the folder only) and remove from folder;
+  moving goes through drag and drop; the sidebar header has a "New folder" icon button and
   the project page header a "New folder" text button. Actions are shown on row `:hover` and
   `:focus-within` (they stay focusable while transparent) and always under `@media (hover: none)`;
   the count hides while they show. Each has an i18n accessible name and a 44px target on coarse
@@ -303,7 +310,7 @@ shadow root.
   delete confirmation with Cancel focused (`delete-folder.panel.ts`; deleting a folder also
   deletes its sub-folders at any depth and unfiles their conversations, which show again in
   claude.ai's lists, and the text counts both with `deletionImpact`), the conversation adder
-  (`conversation-adder.panel.ts`) and the move panel (`move-destination.panel.ts`).
+  (`conversation-adder.panel.ts`).
 - **Drag and drop** (`folder-drag-drop.ts`): sources are our folder and conversation rows and
   claude.ai's conversation links; targets are folder rows (move or file into that folder) and the
   section headers (a folder goes to the top level, a conversation leaves its folder). The views
@@ -329,13 +336,28 @@ shadow root.
   `nfc-over` class (tint and inset border, no animation), both cleared on `drop`, `dragend` and
   `stop()`. Native conversation links of the mounted lists are made draggable (claude.ai sets
   `draggable="false"`) by `native-draggables.ts`, which restores the original attribute.
-- **Move panel** (`move-actions.ts`, `move-destinations.ts`): the keyboard and single-pointer
-  alternative to dragging (WCAG 2.5.7). "Move to…" on a folder or a filed conversation opens a
-  panel listing the valid destinations, filterable like the adder: the top level ("No folder" for
-  a conversation, which unfiles it) and every folder in tree order labelled with its path, minus
-  the folder itself and its descendants; the current location is marked with text, an icon and
-  `aria-current`. Choosing one applies the same moves as a drop and gives focus back to the moved
-  row (the former folder when a conversation is unfiled); Escape gives it back to the button.
+- **New session in this folder** (`new-session-actions.ts`, pure state machine in
+  `new-session-intent.ts`): the folder row's `+` records an in-memory intent `{ projectId,
+  folderId }` in the content script (never in storage). Away from the project page, the page is
+  opened by clicking claude.ai's own project link (`spa-navigation.ts`), so claude.ai's router
+  navigates client-side and the content script keeps its memory; the sidebar section that shows
+  the button always sits in the project's sidebar group, which holds that link. Without such a link
+  the page is loaded with `location.assign`, which loses the intent: nothing is filed (no
+  `sessionStorage` carry-over, kept out for simplicity). On the project page the composer
+  (`shared/claude-dom/composer.ts`) is focused once and a chip in the panel layer ("Will be filed
+  in <emoji> <name>", `new-session-chip.ts`, themed and placed like a panel, × button with a 44px
+  target on coarse pointers) shows under the composer. When the location next changes to
+  `/chat/<id>` from that project page to a chat that did not exist before (ids listed anywhere in
+  the page or filed in the project, snapshotted when the intent starts and when the project page
+  opens; opening such an existing chat cancels), the chat is filed with `fileInFolder` (titled from
+  claude.ai's lists when shown, else "Untitled") once its header shows the same project
+  (`shared/claude-dom/chat-project.ts`); a chat of another project cancels. The intent is also
+  cancelled by the ×, by any other navigation, when the folder disappears from the tree, after
+  10 minutes (timer, and checked on every sync against the injected clock) and on `stop()`.
+- **Untitled conversations** (`untitled-conversations.ts`, pure): on every refresh, filed
+  conversations whose title is still the "Untitled" placeholder take the title claude.ai shows for
+  them in any native link of the page. The tree does not record whether a title was typed by the
+  user, so only the placeholder string counts as a default; any other title is never overwritten.
 - **Adder candidates** (`conversation-candidates.ts`): the conversations claude.ai shows in the
   native lists where the project's sections are mounted (sidebar project list, project page
   Recents), not yet filed in the project, deduplicated, titled with `conversationTitle`. This is

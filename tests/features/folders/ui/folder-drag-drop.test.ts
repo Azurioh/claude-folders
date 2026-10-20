@@ -114,6 +114,7 @@ describe('drag and drop', () => {
       panelLayer: createPanelLayer(),
       folderIds: new SequentialFolderIdProvider(),
       now: () => clock.now(),
+      assign: vi.fn(),
     });
     await flushPromises();
   });

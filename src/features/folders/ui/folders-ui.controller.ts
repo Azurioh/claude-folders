@@ -1,8 +1,10 @@
+import { i18n } from '#i18n';
 import type { FolderIdProvider } from '@/features/folders/domain/folder-id.provider';
 import type { ProjectFolders, Section } from '@/features/folders/domain/folders.model';
 import { toggleFolderOpen, toggleSection } from '@/features/folders/domain/folders.operations';
 import type { FoldersRepository, ProjectId } from '@/features/folders/domain/folders.repository';
 import type { BrowserHideFiledSetting } from '@/features/folders/storage/browser-hide-filed.setting';
+import { listedConversationTitle } from '@/features/folders/ui/conversation-candidates';
 import { clearFiledMarks, markFiled } from '@/features/folders/ui/filed-marks';
 import { FloatingPanels } from '@/features/folders/ui/floating-panel';
 import { FolderActions } from '@/features/folders/ui/folder-actions';
@@ -11,11 +13,12 @@ import {
   type FoldersSectionHandlers,
   renderFoldersSection,
 } from '@/features/folders/ui/folders-section.view';
-import { MoveActions } from '@/features/folders/ui/move-actions';
 import { NativeDraggables } from '@/features/folders/ui/native-draggables';
 import { copyNativeRowLook } from '@/features/folders/ui/native-row-look';
+import { NewSessionActions } from '@/features/folders/ui/new-session-actions';
 import { ProjectFoldersStore } from '@/features/folders/ui/project-folders.store';
 import { openThroughNativeLink } from '@/features/folders/ui/spa-navigation';
+import { nameUntitledConversations } from '@/features/folders/ui/untitled-conversations';
 import { currentChatId } from '@/shared/claude-dom/claude-ids';
 import { findProjectRecents, type ProjectRecents } from '@/shared/claude-dom/project-recents';
 import { COLOR_SCHEME_QUERY, THEME_ROOT_ATTRIBUTES } from '@/shared/claude-dom/selectors';
@@ -82,7 +85,7 @@ class FoldersUiController implements FoldersUi {
   private readonly store: ProjectFoldersStore;
   private readonly panels: FloatingPanels;
   private readonly actions: FolderActions;
-  private readonly moves: MoveActions;
+  private readonly sessions: NewSessionActions;
   private readonly dragDrop: FolderDragDrop;
   private readonly nativeDraggables = new NativeDraggables();
   private readonly mounts = new Map<string, Mount>();
@@ -105,6 +108,7 @@ class FoldersUiController implements FoldersUi {
     panelLayer: HTMLElement;
     folderIds: FolderIdProvider;
     now: () => number;
+    assign: (url: string) => void;
   }) {
     this.document = params.document;
     this.pathname = params.pathname;
@@ -121,7 +125,14 @@ class FoldersUiController implements FoldersUi {
       folderIds: params.folderIds,
       listsOf: (projectId) => this.listsOf(projectId),
     });
-    this.moves = new MoveActions({ store: this.store, panels: this.panels });
+    this.sessions = new NewSessionActions({
+      document: this.document,
+      pathname: params.pathname,
+      now: params.now,
+      assign: params.assign,
+      store: this.store,
+      panelLayer: params.panelLayer,
+    });
     this.dragDrop = new FolderDragDrop({
       window: this.document.defaultView ?? window,
       store: this.store,
@@ -174,11 +185,13 @@ class FoldersUiController implements FoldersUi {
     for (const mount of this.mounts.values()) {
       this.refresh({ mount, currentChatId: chatId });
     }
+    this.sessions.sync();
   }
 
   stop(): void {
     this.stopped = true;
     this.panels.close();
+    this.sessions.stop();
     this.dragDrop.stop();
     this.observer.disconnect();
     this.themeObserver.disconnect();
@@ -301,7 +314,7 @@ class FoldersUiController implements FoldersUi {
     const { projectId } = params;
     return {
       ...this.actions.handlersFor(params),
-      ...this.moves.handlersFor(params),
+      ...this.sessions.handlersFor(params),
       onToggleFolder: (folderId) => {
         this.store.apply({
           projectId,
@@ -317,6 +330,27 @@ class FoldersUiController implements FoldersUi {
     };
   }
 
+  /**
+   * Gives the conversations filed as "Untitled" the title claude.ai now shows for them anywhere in
+   * the page. Saving re-syncs the UI (rendering included) before this returns.
+   * @returns `true` when titles were saved, so the caller's state is outdated.
+   */
+  private nameUntitled(params: { projectId: ProjectId; state: ProjectFolders }): boolean {
+    const named = nameUntitledConversations({
+      state: params.state,
+      placeholder: i18n.t('conversationUntitled'),
+      titleOf: (conversationId) =>
+        listedConversationTitle({ lists: [this.document], conversationId }),
+    });
+    return (
+      named !== null &&
+      this.store.apply({
+        projectId: params.projectId,
+        operation: () => ({ ok: true, state: named }),
+      })
+    );
+  }
+
   private removeMountsExcept(kept: ReadonlySet<string>): void {
     for (const [key, mount] of this.mounts) {
       if (!kept.has(key)) {
@@ -330,7 +364,7 @@ class FoldersUiController implements FoldersUi {
   private refresh(params: { mount: Mount; currentChatId: string | null }): void {
     const { mount } = params;
     const state = this.store.find(mount.projectId);
-    if (state === null) {
+    if (state === null || this.nameUntitled({ projectId: mount.projectId, state })) {
       return;
     }
     const inputs: RenderInputs = {
@@ -364,7 +398,8 @@ class FoldersUiController implements FoldersUi {
  * sidebar project and on the project page, filed conversations are hidden (or dimmed) in the
  * native lists next to them, and everything follows DOM mutations (debounced), storage changes
  * from any tab and calls to `sync` (e.g. on SPA navigation). Folders and conversations are moved
- * by drag and drop (including claude.ai's own conversation links) or with the "Move to…" panel.
+ * by drag and drop (including claude.ai's own conversation links); "New session in this folder"
+ * files the next session started on the project page.
  * @param params.document - The claude.ai document.
  * @param params.pathname - Reads the current `location.pathname`.
  * @param params.repository - Where folder trees are read, watched and saved.
@@ -372,7 +407,10 @@ class FoldersUiController implements FoldersUi {
  * @param params.panelLayer - Where floating panels are rendered: a container inside a shadow root,
  *   so claude.ai's styles and the panels' do not collide.
  * @param params.folderIds - Generates the ids of new folders.
- * @param params.now - Reads the current time in milliseconds; dates what a drag remembers.
+ * @param params.now - Reads the current time in milliseconds; dates what a drag remembers and
+ *   when a new session request expires.
+ * @param params.assign - Loads a URL (`location.assign`), when claude.ai shows no link to a
+ *   project page to open.
  * @returns The running UI; call `stop` when the content script is invalidated.
  */
 export function startFoldersUi(params: {
@@ -383,6 +421,7 @@ export function startFoldersUi(params: {
   panelLayer: HTMLElement;
   folderIds: FolderIdProvider;
   now: () => number;
+  assign: (url: string) => void;
 }): FoldersUi {
   const ui = new FoldersUiController(params);
   ui.sync();

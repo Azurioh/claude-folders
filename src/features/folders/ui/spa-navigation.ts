@@ -1,5 +1,5 @@
-import { chatIdOf } from '@/shared/claude-dom/claude-ids';
-import { nativeChatLinks } from '@/shared/claude-dom/native-links';
+import { chatIdOf, projectIdOf } from '@/shared/claude-dom/claude-ids';
+import { nativeChatLinks, nativeProjectLinks } from '@/shared/claude-dom/native-links';
 
 const PRIMARY_BUTTON = 0;
 
@@ -37,4 +37,28 @@ export function openThroughNativeLink(params: {
   }
   event.preventDefault();
   native.click();
+}
+
+/**
+ * Opens a project page the way claude.ai does: a click on claude.ai's own link to the project, so
+ * its router navigates without reloading the page and the content script keeps what it holds in
+ * memory. When claude.ai shows no link to the project, the page is loaded instead.
+ * @param params.root - Where claude.ai's links are searched, e.g. the document.
+ * @param params.projectId - The project to open.
+ * @param params.assign - Loads a URL, e.g. `location.assign`.
+ * @returns `true` when claude.ai's router navigates, `false` when the page is loaded.
+ */
+export function openProjectPage(params: {
+  root: ParentNode;
+  projectId: string;
+  assign: (url: string) => void;
+}): boolean {
+  const { root, projectId, assign } = params;
+  const native = nativeProjectLinks(root).find((link) => projectIdOf(link) === projectId);
+  if (native === undefined) {
+    assign(`/project/${projectId}`);
+    return false;
+  }
+  native.click();
+  return true;
 }
