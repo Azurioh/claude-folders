@@ -1,6 +1,7 @@
 /**
- * Moves shared by drag and drop and the "Move to…" panel. Each one reveals its destination (the
- * folder and its ancestors are opened), so the moved row stays visible and can take focus back.
+ * Moves and filings of drag and drop, the conversation adder and new sessions. Each one reveals its
+ * destination (the folder and its ancestors are opened), so the moved row stays visible and can
+ * take focus back.
  */
 import {
   type ConversationId,

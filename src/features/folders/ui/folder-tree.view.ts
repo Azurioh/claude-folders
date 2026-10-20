@@ -43,16 +43,14 @@ export interface FolderEditingHandlers {
   onUnfileConversation(params: { conversationId: ConversationId; folderId: FolderId }): void;
 }
 
-/** Reactions of a rendered folder tree to its "Move to…" actions; each opens the move panel. */
-export interface FolderMoveHandlers {
-  /** "Move to…" was pressed on a folder. */
-  onMoveFolder(params: { folderId: FolderId; anchor: HTMLElement }): void;
-  /** "Move to…" was pressed on a conversation. */
-  onMoveConversation(params: { conversationId: ConversationId; anchor: HTMLElement }): void;
+/** Reactions of a rendered folder tree to its "New session in this folder" action. */
+export interface FolderSessionHandlers {
+  /** "New session in this folder" was pressed on a folder. */
+  onNewSession(params: { folderId: FolderId }): void;
 }
 
 /** Reactions of a rendered folder tree to user actions. */
-export interface FolderTreeHandlers extends FolderEditingHandlers, FolderMoveHandlers {
+export interface FolderTreeHandlers extends FolderEditingHandlers, FolderSessionHandlers {
   /** A folder row was activated (click, Enter or Space). */
   onToggleFolder(folderId: FolderId): void;
   /** A conversation link was clicked; the handler decides how to navigate. */
@@ -152,6 +150,14 @@ function folderActions(params: { context: TreeContext; folder: Folder }): RowAct
   return [
     {
       icon: 'plus',
+      label: i18n.t('actionNewSession', [name]),
+      focusKey: `new-session:${id}`,
+      onActivate: () => {
+        handlers.onNewSession({ folderId: id });
+      },
+    },
+    {
+      icon: 'folderPlus',
       label: i18n.t('actionNewSubfolder', [name]),
       focusKey: `new-subfolder:${id}`,
       onActivate: (anchor) => {
@@ -164,14 +170,6 @@ function folderActions(params: { context: TreeContext; folder: Folder }): RowAct
       focusKey: `add-conversations:${id}`,
       onActivate: (anchor) => {
         handlers.onAddConversations({ folderId: id, anchor });
-      },
-    },
-    {
-      icon: 'folderInput',
-      label: i18n.t('actionMove', [name]),
-      focusKey: `move:folder:${id}`,
-      onActivate: (anchor) => {
-        handlers.onMoveFolder({ folderId: id, anchor });
       },
     },
     {
@@ -247,14 +245,6 @@ function conversationActions(params: {
   const { context, conversationId, conversation } = params;
   const { handlers } = context;
   return [
-    {
-      icon: 'folderInput',
-      label: i18n.t('actionMove', [conversation.title]),
-      focusKey: `move:conversation:${conversationId}`,
-      onActivate: (anchor) => {
-        handlers.onMoveConversation({ conversationId, anchor });
-      },
-    },
     {
       icon: 'pencil',
       label: i18n.t('actionRenameConversation', [conversation.title]),

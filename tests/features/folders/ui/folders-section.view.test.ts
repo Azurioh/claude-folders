@@ -9,6 +9,7 @@ import {
   type FoldersSectionHandlers,
   renderFoldersSection,
 } from '@/features/folders/ui/folders-section.view';
+import { createIcon, type IconName } from '@/features/folders/ui/icons';
 
 const CHAT_A = '0a0a0a0a-0000-4000-8000-00000000000a';
 const CHAT_B = '0b0b0b0b-0000-4000-8000-00000000000b';
@@ -39,8 +40,7 @@ function handlers(): FoldersSectionHandlers {
     onDeleteFolder: vi.fn(),
     onRenameConversation: vi.fn(),
     onUnfileConversation: vi.fn(),
-    onMoveFolder: vi.fn(),
-    onMoveConversation: vi.fn(),
+    onNewSession: vi.fn(),
   };
 }
 
@@ -69,6 +69,18 @@ function clickAction(button: HTMLButtonElement | undefined): MouseEvent {
   const event = new MouseEvent('click', { bubbles: true, cancelable: true });
   button?.dispatchEvent(event);
   return event;
+}
+
+function iconPathOf(button: HTMLButtonElement | undefined): string | null {
+  return button?.querySelector('svg path')?.getAttribute('d') ?? null;
+}
+
+function iconPath(name: IconName): string | null {
+  return (
+    createIcon({ document, name, size: 14, className: '' })
+      .querySelector('path')
+      ?.getAttribute('d') ?? null
+  );
 }
 
 function container(): HTMLElement {
@@ -320,15 +332,15 @@ describe('renderFoldersSection', () => {
   });
 
   describe('actions', () => {
-    it('gives each folder row named actions: new sub-folder, add conversations, move, edit, delete', () => {
+    it('gives each folder row named actions: new session, new sub-folder, add conversations, edit, delete', () => {
       const root = render({ section: 'sidebar', spies: handlers() });
 
       const actions = actionsOf(folderRow({ root, name: 'Work' }));
 
       expect(actions.map((action) => action.getAttribute('aria-label'))).toEqual([
+        'actionNewSession(Work)',
         'actionNewSubfolder(Work)',
         'actionAddConversations(Work)',
-        'actionMove(Work)',
         'actionEditFolder(Work)',
         'actionDeleteFolder(Work)',
       ]);
@@ -339,14 +351,30 @@ describe('renderFoldersSection', () => {
       }
     });
 
-    it('gives each conversation row named actions: move, rename, remove from folder', () => {
+    it('draws the new session action as a plus and the new sub-folder one as a folder-plus', () => {
+      const root = render({ section: 'sidebar', spies: handlers() });
+      const [newSession, newSubfolder] = actionsOf(folderRow({ root, name: 'Work' }));
+
+      expect(iconPathOf(newSession)).toBe(iconPath('plus'));
+      expect(iconPathOf(newSubfolder)).toBe(iconPath('folderPlus'));
+    });
+
+    it('offers no "Move to…" action: drag and drop moves rows', () => {
+      const root = render({ section: 'sidebar', spies: handlers() });
+      const labels = [...root.querySelectorAll('.nfc-action')].map((action) =>
+        action.getAttribute('aria-label'),
+      );
+
+      expect(labels.some((label) => label?.startsWith('actionMove'))).toBe(false);
+    });
+
+    it('gives each conversation row named actions: rename, remove from folder', () => {
       const root = render({ section: 'sidebar', spies: handlers() });
 
       const link = root.querySelector('a.nfc-conv');
       const actions = link === null ? [] : actionsOf(link);
 
       expect(actions.map((action) => action.getAttribute('aria-label'))).toEqual([
-        'actionMove(Alpha chat)',
         'actionRenameConversation(Alpha chat)',
         'actionUnfileConversation(Alpha chat)',
       ]);
@@ -364,18 +392,20 @@ describe('renderFoldersSection', () => {
     it('hands folder actions to their handler with the pressed button, without toggling', () => {
       const spies = handlers();
       const root = render({ section: 'sidebar', spies });
-      const [newSubfolder, add, move, edit, remove] = actionsOf(folderRow({ root, name: 'Work' }));
+      const [newSession, newSubfolder, add, edit, remove] = actionsOf(
+        folderRow({ root, name: 'Work' }),
+      );
 
-      const event = clickAction(newSubfolder);
+      const event = clickAction(newSession);
+      clickAction(newSubfolder);
       clickAction(add);
-      clickAction(move);
       clickAction(edit);
       clickAction(remove);
 
       expect(event.defaultPrevented).toBe(true);
+      expect(spies.onNewSession).toHaveBeenCalledWith({ folderId: 'work' });
       expect(spies.onCreateFolder).toHaveBeenCalledWith({ parentId: 'work', anchor: newSubfolder });
       expect(spies.onAddConversations).toHaveBeenCalledWith({ folderId: 'work', anchor: add });
-      expect(spies.onMoveFolder).toHaveBeenCalledWith({ folderId: 'work', anchor: move });
       expect(spies.onEditFolder).toHaveBeenCalledWith({ folderId: 'work', anchor: edit });
       expect(spies.onDeleteFolder).toHaveBeenCalledWith({ folderId: 'work', anchor: remove });
       expect(spies.onToggleFolder).not.toHaveBeenCalled();
@@ -385,16 +415,11 @@ describe('renderFoldersSection', () => {
       const spies = handlers();
       const root = render({ section: 'sidebar', spies });
       const link = root.querySelector('a.nfc-conv');
-      const [move, rename, unfile] = link === null ? [] : actionsOf(link);
+      const [rename, unfile] = link === null ? [] : actionsOf(link);
 
-      clickAction(move);
       clickAction(rename);
       clickAction(unfile);
 
-      expect(spies.onMoveConversation).toHaveBeenCalledWith({
-        conversationId: CHAT_A,
-        anchor: move,
-      });
       expect(spies.onRenameConversation).toHaveBeenCalledWith({
         conversationId: CHAT_A,
         anchor: rename,

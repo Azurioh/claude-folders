@@ -8,6 +8,7 @@ folderConversationCount:
   1: 1 conversation
   n: $1 conversations
 actionNewFolder: Nouveau dossier
+actionNewSession: "Nouvelle session dans « $1 »"
 actionNewSubfolder: "Nouveau sous-dossier dans « $1 »"
 actionAddConversations: "Ajouter des conversations à « $1 »"
 actionEditFolder: "Modifier « $1 » (nom, emoji, couleur)"
@@ -49,14 +50,9 @@ deleteFolderUnfiledConversations:
 renameConversationHint: Seul le titre affiché dans vos dossiers change.
 adderEmpty: Aucune conversation disponible
 adderHint: Liste les conversations non classées affichées dans la page ou la barre latérale.
-actionMove: "Déplacer « $1 » vers…"
-panelMoveTitle: "Déplacer « $1 »"
-fieldFilterFolders: Filtrer les dossiers
-moveDestinationRoot: Premier niveau
-moveDestinationNoFolder: Aucun dossier
-moveCurrentLocation: Actuel
-moveEmpty: Aucun dossier correspondant
 conversationUntitled: Sans titre
+newSessionChip: "Sera rangée dans $1"
+newSessionCancel: "Ne pas ranger la nouvelle session dans « $1 »"
 sectionDisplayTitle: Affichage
 hideFiledLabel: Masquer les conversations classées dans les listes de claude.ai
 hideFiledHint: "Activé : les conversations rangées dans un dossier sont masquées des listes de claude.ai. Désactivé : elles y restent, estompées."

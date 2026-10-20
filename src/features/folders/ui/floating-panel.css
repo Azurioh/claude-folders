@@ -28,6 +28,50 @@
   box-sizing: border-box;
 }
 
+/* "Will be filed in…" chip shown next to the composer while a new session is meant for a folder. */
+.nfc-chip {
+  position: fixed;
+  z-index: 10000;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100vw - 16px);
+  padding: 2px 2px 2px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.nfc-chip-icon {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.nfc-chip-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nfc-chip-cancel {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.nfc-chip-cancel:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
 .nfc-panel-title {
   font-weight: 600;
   font-size: 13px;
@@ -123,6 +167,7 @@
 .nfc-emoji-btn,
 .nfc-swatch,
 .nfc-adder-item,
+.nfc-chip-cancel,
 .nfc-button {
   margin: 0;
   border: 0;
@@ -231,17 +276,6 @@
   color: #d97757;
 }
 
-.nfc-move-item[aria-current] {
-  font-weight: 600;
-}
-
-.nfc-move-current {
-  flex-shrink: 0;
-  font-size: 11px;
-  font-weight: 400;
-  opacity: 0.75;
-}
-
 .nfc-panel-buttons {
   display: flex;
   justify-content: flex-end;
@@ -283,6 +317,7 @@
 .nfc-emoji-btn:focus-visible,
 .nfc-swatch:focus-visible,
 .nfc-adder-item:focus-visible,
+.nfc-chip-cancel:focus-visible,
 .nfc-button:focus-visible {
   outline: 2px solid #d97757;
   outline-offset: 1px;
@@ -313,7 +348,8 @@
     grid-template-columns: repeat(6, 1fr);
   }
 
-  .nfc-swatch {
+  .nfc-swatch,
+  .nfc-chip-cancel {
     width: 44px;
     height: 44px;
   }

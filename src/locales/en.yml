@@ -8,6 +8,7 @@ folderConversationCount:
   1: 1 conversation
   n: $1 conversations
 actionNewFolder: New folder
+actionNewSession: "New session in “$1”"
 actionNewSubfolder: "New sub-folder in “$1”"
 actionAddConversations: "Add conversations to “$1”"
 actionEditFolder: "Edit “$1” (name, emoji, color)"
@@ -49,14 +50,9 @@ deleteFolderUnfiledConversations:
 renameConversationHint: Only the title shown in your folders changes.
 adderEmpty: No conversation available
 adderHint: Lists unfiled conversations shown in the page or sidebar.
-actionMove: "Move “$1” to…"
-panelMoveTitle: "Move “$1”"
-fieldFilterFolders: Filter folders
-moveDestinationRoot: Top level
-moveDestinationNoFolder: No folder
-moveCurrentLocation: Current
-moveEmpty: No matching folder
 conversationUntitled: Untitled
+newSessionChip: "Will be filed in $1"
+newSessionCancel: "Do not file the new session in “$1”"
 sectionDisplayTitle: Display
 hideFiledLabel: Hide filed conversations in claude.ai lists
 hideFiledHint: "On: conversations you put in a folder are hidden from claude.ai's own lists. Off: they stay there, dimmed."

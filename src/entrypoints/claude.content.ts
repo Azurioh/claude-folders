@@ -42,6 +42,9 @@ export default defineContentScript({
       panelLayer: panelLayer.uiContainer,
       folderIds: new RandomUuidFolderIdProvider(),
       now: () => Date.now(),
+      assign: (url) => {
+        location.assign(url);
+      },
     });
     const stopDiagnostic = answerPageDiagnosticRequests(() =>
       diagnose({ root: document, pathname: location.pathname }),

@@ -29,6 +29,38 @@ interface OpenPanel {
 }
 
 /**
+ * Paints a floating element like the page around its anchor: the anchor's first opaque
+ * background, text color and font (`panel-theme.ts`).
+ * @param params.element - The floating element.
+ * @param params.anchor - The page element it is shown next to.
+ */
+export function applyAnchorTheme(params: { element: HTMLElement; anchor: HTMLElement }): void {
+  const { element, anchor } = params;
+  const theme = panelThemeOf(anchor);
+  element.style.backgroundColor = theme.background;
+  element.style.color = theme.color;
+  element.style.fontFamily = theme.fontFamily;
+}
+
+/**
+ * Places a rendered, fixed-position floating element under its anchor, or above it when there is
+ * no room below, inside the viewport (`panel-position.ts`).
+ * @param params.element - The floating element, already in the document.
+ * @param params.anchor - The page element it is shown next to.
+ */
+export function placeNextToAnchor(params: { element: HTMLElement; anchor: HTMLElement }): void {
+  const { element, anchor } = params;
+  const view = anchor.ownerDocument.defaultView ?? window;
+  const placement = panelPosition({
+    anchor: anchor.getBoundingClientRect(),
+    panel: element.getBoundingClientRect(),
+    viewport: { width: view.innerWidth, height: view.innerHeight },
+  });
+  element.style.top = `${placement.top}px`;
+  element.style.left = `${placement.left}px`;
+}
+
+/**
  * The floating panels (editors, confirmations, pickers) of the folders UI: non-modal dialogs
  * rendered in a layer isolated from claude.ai's styles (a container inside a shadow root),
  * positioned under the control that opened them and themed like the page around it.
@@ -100,9 +132,9 @@ export class FloatingPanels {
         this.dismiss({ panel, restore: true });
       }
     });
-    this.applyTheme({ element, anchor });
+    applyAnchorTheme({ element, anchor });
     this.layer.append(element);
-    this.place({ element, anchor });
+    placeNextToAnchor({ element, anchor });
     document.addEventListener('pointerdown', panel.onPointerDown, true);
     this.current = panel;
     content.initialFocus.focus();
@@ -126,27 +158,5 @@ export class FloatingPanels {
     if (restore) {
       panel.restoreFocus();
     }
-  }
-
-  private applyTheme(params: { element: HTMLElement; anchor: HTMLElement }): void {
-    const { element, anchor } = params;
-    const theme = panelThemeOf(anchor);
-    element.style.backgroundColor = theme.background;
-    element.style.color = theme.color;
-    element.style.fontFamily = theme.fontFamily;
-  }
-
-  private place(params: { element: HTMLElement; anchor: HTMLElement }): void {
-    const { element, anchor } = params;
-    const view = anchor.ownerDocument.defaultView ?? window;
-    const anchorBox = anchor.getBoundingClientRect();
-    const panelBox = element.getBoundingClientRect();
-    const placement = panelPosition({
-      anchor: anchorBox,
-      panel: panelBox,
-      viewport: { width: view.innerWidth, height: view.innerHeight },
-    });
-    element.style.top = `${placement.top}px`;
-    element.style.left = `${placement.left}px`;
   }
 }
