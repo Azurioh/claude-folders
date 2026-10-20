@@ -13,7 +13,6 @@ import {
 import { BrowserFoldersRepository } from '@/features/folders/storage/browser-folders.repository';
 import { BrowserFoldersSnapshotStore } from '@/features/folders/storage/browser-folders-snapshot.store';
 import { BrowserHideFiledSetting } from '@/features/folders/storage/browser-hide-filed.setting';
-import type { DomDiagnostic } from '@/shared/claude-dom/diagnostic';
 
 const PROJECT_A = '0b6f6a3e-4c1d-4b8a-9f2e-1a2b3c4d5e6f';
 const PROJECT_B = 'f1e2d3c4-b5a6-4978-8a1b-2c3d4e5f6a7b';
@@ -21,13 +20,6 @@ const CONVERSATION = 'c0ffee00-4c1d-4b8a-9f2e-1a2b3c4d5e6f';
 const FOLDER_NAME = 'Secret folder';
 const CONVERSATION_TITLE = 'Private conversation title';
 const EXPORT_DATE = new Date(2026, 9, 19, 10, 0);
-const PAGE_DIAGNOSTIC: DomDiagnostic = {
-  chatLinks: 12,
-  projectLinks: 3,
-  expandedSidebarProjects: 1,
-  projectRecentsFound: false,
-  pageKind: 'chat',
-};
 
 function projectState(name: string): ProjectFolders {
   return {
@@ -52,29 +44,23 @@ describe('popup menu', () => {
   let page: PopupMenu | null = null;
   let root: HTMLElement;
   const saveFile = vi.fn();
-  const copyText = vi.fn(async (_text: string): Promise<void> => undefined);
-  const pageDiagnostic = vi.fn(async (): Promise<DomDiagnostic | null> => PAGE_DIAGNOSTIC);
 
-  /** Starts the popup and waits for its first reads (counts, setting, diagnostic). */
+  /** Starts the popup and waits for its first reads (counts, setting). */
   async function start(backup: PopupBackupMode = { kind: 'inline', saveFile }): Promise<PopupMenu> {
     const started = startPopupMenu({
       document,
       root,
       store: new BrowserFoldersSnapshotStore(),
       hideFiled: new BrowserHideFiledSetting(),
-      pageDiagnostic,
       extensionVersion: '1.2.3',
-      userAgent: 'Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0',
       locale: 'en',
       now: () => EXPORT_DATE,
       backup,
-      copyText,
     });
     page = started;
     await vi.waitFor(() => {
-      expect(element('.nfc-summary').textContent).not.toBe('');
+      expect(element('.nfc-overview').getAttribute('aria-busy')).toBe('false');
       expect(hideFiledSwitch().disabled).toBe(false);
-      expect(button('buttonCopyDiagnostic').disabled).toBe(false);
     });
     return started;
   }
@@ -107,6 +93,14 @@ describe('popup menu', () => {
     return element<HTMLInputElement>('input[role="switch"]');
   }
 
+  /** The overview's counts, as `label: value` pairs. */
+  function stats(): string[] {
+    return [...root.querySelectorAll('.nfc-stat')].map(
+      (stat) =>
+        `${stat.querySelector('dt')?.textContent}: ${stat.querySelector('dd')?.textContent}`,
+    );
+  }
+
   function chooseFile(file: File): void {
     const input = element<HTMLInputElement>('input[type="file"]');
     Object.defineProperty(input, 'files', { value: [file], configurable: true });
@@ -117,9 +111,6 @@ describe('popup menu', () => {
     fakeBrowser.reset();
     stubI18n();
     saveFile.mockClear();
-    copyText.mockClear();
-    pageDiagnostic.mockClear();
-    pageDiagnostic.mockResolvedValue(PAGE_DIAGNOSTIC);
     document.body.replaceChildren();
     root = document.createElement('div');
     document.body.append(root);
@@ -136,20 +127,46 @@ describe('popup menu', () => {
   });
 
   describe('structure', () => {
-    it('shows the name, the version, every section and the footer', async () => {
+    it('shows the logo, the name, the version, every section and the footer', async () => {
       await start();
 
+      const logo = element<HTMLImageElement>('header img');
+      expect(logo.getAttribute('src')).toBe('/icon-48.png');
+      expect(logo.getAttribute('srcset')).toContain('/icon-96.png 2x');
+      expect(logo.alt).toBe('');
       expect(element('h1').textContent).toBe('extName');
-      expect(root.textContent).toContain('popupVersion(1.2.3)');
+      expect(element('header').textContent).toContain('popupVersion(1.2.3)');
       expect([...root.querySelectorAll('h2')].map((heading) => heading.textContent)).toEqual([
+        'sectionStoredTitle',
         'sectionDisplayTitle',
         'sectionBackupTitle',
         'sectionDangerTitle',
       ]);
-      expect(element('footer').contains(button('buttonCopyDiagnostic'))).toBe(true);
+      for (const section of root.querySelectorAll('section')) {
+        const headingId = section.getAttribute('aria-labelledby') ?? '';
+        expect(section.querySelector('h2')?.id).toBe(headingId);
+      }
       const link = element<HTMLAnchorElement>('footer a');
       expect(link.getAttribute('href')).toBe('https://github.com/Azurioh/nest-for-claude');
       expect(element('footer').textContent).toContain('footerNotAffiliated');
+    });
+
+    it('draws a 16px icon before the backup labels and a 12px one after the footer link', async () => {
+      await start();
+
+      const backupButtons = [...root.querySelectorAll('button')].filter((button) =>
+        ['buttonExportBackup', 'buttonImportBackup'].includes(button.textContent ?? ''),
+      );
+      expect(backupButtons).toHaveLength(2);
+      for (const button of backupButtons) {
+        const icon = button.firstElementChild;
+        expect(icon?.tagName.toLowerCase()).toBe('svg');
+        expect(icon?.getAttribute('width')).toBe('16');
+        expect(icon?.getAttribute('aria-hidden')).toBe('true');
+      }
+      const linkIcon = element('footer a').lastElementChild;
+      expect(linkIcon?.tagName.toLowerCase()).toBe('svg');
+      expect(linkIcon?.getAttribute('width')).toBe('12');
     });
 
     it('starts with focus on the menu, so nothing is toggled by accident', async () => {
@@ -162,6 +179,31 @@ describe('popup menu', () => {
       await start();
 
       expect(root.querySelector('.nfc-drop-zone')).toBeNull();
+    });
+  });
+
+  describe('overview', () => {
+    it('shows how many projects, folders and filed conversations are stored', async () => {
+      await start();
+
+      expect(stats()).toEqual([
+        'statProjects(2): 2',
+        'statFolders(2): 2',
+        'statConversations(2): 2',
+      ]);
+      expect(root.querySelector('.nfc-empty')).toBeNull();
+    });
+
+    it('explains how to create a first folder when there is none', async () => {
+      await new BrowserFoldersSnapshotStore().clear();
+      await start();
+
+      expect(stats()).toEqual([]);
+      expect(element('.nfc-empty').textContent).toContain('emptyTitle');
+      expect(element('.nfc-empty').textContent).toContain('emptyHint');
+      const link = element<HTMLAnchorElement>('.nfc-empty a');
+      expect(link.getAttribute('href')).toBe('https://claude.ai/');
+      expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     });
   });
 
@@ -202,9 +244,6 @@ describe('popup menu', () => {
   describe('export', () => {
     it('downloads a dated backup of everything stored and reports the counts', async () => {
       await start();
-      await vi.waitFor(() => {
-        expect(root.textContent).toContain('storedSummary(countProjects(2)');
-      });
 
       button('buttonExportBackup').click();
 
@@ -217,7 +256,16 @@ describe('popup menu', () => {
         [PROJECT_A]: projectState(FOLDER_NAME),
         [PROJECT_B]: projectState('Other'),
       });
-      expect(root.textContent).toContain('exportDone(');
+      expect(root.textContent).toContain(
+        'exportDone(countProjects(2),countFolders(2),countConversations(2),nest-for-claude-backup-2026-10-19.json)',
+      );
+    });
+
+    it('makes export the primary action and import the secondary one', async () => {
+      await start();
+
+      expect(button('buttonExportBackup').classList).toContain('nfc-button-primary');
+      expect(button('buttonImportBackup').classList).toContain('nfc-button-secondary');
     });
   });
 
@@ -230,7 +278,13 @@ describe('popup menu', () => {
       await vi.waitFor(() => {
         expect(queryButton('buttonReplace')).toBeDefined();
       });
-      expect(root.textContent).toContain('importSummary(');
+      expect(root.textContent).toMatch(
+        /importSummary\(.+,countProjects\(1\),countFolders\(1\),countConversations\(1\)\)/,
+      );
+      expect(root.textContent).toContain('storedSummary(countProjects(2)');
+      expect(element('[role="group"]').getAttribute('aria-labelledby')).toBe(
+        element('.nfc-confirmation-question').id,
+      );
       expect(root.textContent).toContain('importConfirm');
       expect(document.activeElement).toBe(button('buttonCancel'));
     });
@@ -284,7 +338,13 @@ describe('popup menu', () => {
         'settings:hideFiled$': { v: 1 },
       });
       expect(hideFiledSwitch().checked).toBe(false);
-      expect(root.textContent).toContain('storedSummary(countProjects(1)');
+      await vi.waitFor(() => {
+        expect(stats()).toEqual([
+          'statProjects(1): 1',
+          'statFolders(1): 1',
+          'statConversations(1): 1',
+        ]);
+      });
       expect(document.activeElement).toBe(button('buttonImportBackup'));
     });
 
@@ -375,76 +435,10 @@ describe('popup menu', () => {
         expect(root.textContent).toContain('deleteAllDone');
       });
       expect(await storedEverything()).toEqual({});
-      expect(root.textContent).toContain('storedSummary(countProjects(0)');
+      await vi.waitFor(() => {
+        expect(root.querySelector('.nfc-empty')).not.toBeNull();
+      });
       expect(document.activeElement).toBe(button('buttonDeleteAll'));
-    });
-  });
-
-  describe('copy diagnostic', () => {
-    async function copied(): Promise<string> {
-      button('buttonCopyDiagnostic').click();
-      await vi.waitFor(() => {
-        expect(copyText).toHaveBeenCalledTimes(1);
-      });
-      const [text] = copyText.mock.calls[0] ?? [];
-      if (typeof text !== 'string') {
-        throw new Error('Nothing copied');
-      }
-      return text;
-    }
-
-    it('copies versions, counts and the claude.ai page, without ids, names or titles', async () => {
-      await start();
-
-      const text = await copied();
-
-      expect(text).toContain('Nest for Claude 1.2.3');
-      expect(text).toContain('Browser: Firefox 131');
-      expect(text).toContain('Stored: 2 projects, 2 folders, 2 filed conversations');
-      expect(text).toContain('Hide filed conversations: on');
-      expect(text).toContain('claude.ai tab: conversation');
-      expect(text).toContain('Conversation links: 12');
-      for (const secret of [PROJECT_A, PROJECT_B, CONVERSATION, FOLDER_NAME, CONVERSATION_TITLE]) {
-        expect(text).not.toContain(secret);
-      }
-      await vi.waitFor(() => {
-        expect(root.textContent).toContain('diagnosticCopied');
-      });
-    });
-
-    it('says when no claude.ai tab answered', async () => {
-      pageDiagnostic.mockResolvedValue(null);
-      await start();
-
-      expect(await copied()).toContain('claude.ai tab: none found');
-    });
-
-    it('collects the diagnostic again after the data was deleted', async () => {
-      await start();
-      button('buttonDeleteAll').click();
-      button('buttonDelete').click();
-      await vi.waitFor(() => {
-        expect(pageDiagnostic).toHaveBeenCalledTimes(2);
-      });
-      await flushPromises();
-
-      expect(await copied()).toContain('Stored: 0 projects, 0 folders, 0 filed conversations');
-    });
-
-    it('shows the text selected in a read-only field when copying fails', async () => {
-      copyText.mockRejectedValueOnce(new Error('denied'));
-      await start();
-
-      button('buttonCopyDiagnostic').click();
-
-      await vi.waitFor(() => {
-        expect(root.textContent).toContain('copyFailed');
-      });
-      const fallback = element<HTMLTextAreaElement>('textarea');
-      expect(fallback.hidden).toBe(false);
-      expect(fallback.readOnly).toBe(true);
-      expect(fallback.value).toContain('Nest for Claude 1.2.3');
-      expect(document.activeElement).toBe(fallback);
     });
   });
 
@@ -456,7 +450,11 @@ describe('popup menu', () => {
       expect(root.querySelector('input[type="file"]')).toBeNull();
       expect(queryButton('buttonExportBackup')).toBeUndefined();
       expect(root.textContent).toContain('backupTabHint');
-      expect(root.textContent).toContain('storedSummary(countProjects(2)');
+      expect(stats()).toEqual([
+        'statProjects(2): 2',
+        'statFolders(2): 2',
+        'statConversations(2): 2',
+      ]);
 
       button('buttonOpenBackupPage').click();
 
@@ -470,7 +468,7 @@ describe('popup menu', () => {
       button('buttonDelete').click();
 
       await vi.waitFor(() => {
-        expect(root.textContent).toContain('storedSummary(countProjects(0)');
+        expect(root.querySelector('.nfc-empty')).not.toBeNull();
       });
     });
   });

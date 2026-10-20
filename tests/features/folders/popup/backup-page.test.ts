@@ -40,7 +40,7 @@ describe('backup page', () => {
       saveFile,
     });
     await vi.waitFor(() => {
-      expect(root.querySelector('.nfc-summary')?.textContent).not.toBe('');
+      expect(root.querySelector('.nfc-overview')?.getAttribute('aria-busy')).toBe('false');
     });
   }
 
@@ -59,13 +59,16 @@ describe('backup page', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows only the backup section under its title', async () => {
+  it('shows the overview and the backup section under its title and logo', async () => {
     await start();
 
+    expect(root.querySelector('header img')?.getAttribute('src')).toBe('/icon-48.png');
     expect(root.querySelector('h1')?.textContent).toBe('backupPageTitle');
     expect([...root.querySelectorAll('h2')].map((heading) => heading.textContent)).toEqual([
+      'sectionStoredTitle',
       'sectionBackupTitle',
     ]);
+    expect(root.querySelector('.nfc-stat dd')?.textContent).toBe('1');
   });
 
   it('exports a backup', async () => {
@@ -108,6 +111,9 @@ describe('backup page', () => {
         projects: { [PROJECT_B]: PROJECT },
         hideFiled: true,
       });
+    });
+    await vi.waitFor(() => {
+      expect(root.textContent).toContain('importDone(');
     });
   });
 });

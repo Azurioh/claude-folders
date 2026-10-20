@@ -54,10 +54,10 @@ conversationUntitled: Sans titre
 newSessionChip: "Sera rangée dans $1"
 newSessionCancel: "Ne pas ranger la nouvelle session dans « $1 »"
 sectionDisplayTitle: Affichage
-hideFiledLabel: Masquer les conversations classées dans les listes de claude.ai
-hideFiledHint: "Activé : les conversations rangées dans un dossier sont masquées des listes de claude.ai. Désactivé : elles y restent, estompées."
+hideFiledLabel: Masquer les conversations classées
+hideFiledHint: "Activé : masquées des listes de claude.ai. Désactivé : affichées, estompées."
 sectionBackupTitle: Sauvegarde
-backupDescription: Enregistrez tous vos dossiers dans un fichier, ou restaurez-les depuis un fichier. Le fichier reste sur votre appareil.
+backupDescription: Un fichier de tous vos dossiers, gardé sur votre appareil.
 countProjects:
   1: 1 projet
   n: $1 projets
@@ -68,8 +68,21 @@ countConversations:
   1: 1 conversation classée
   n: $1 conversations classées
 storedSummary: "Stocké dans ce navigateur : $1, $2, $3."
-buttonExportBackup: Exporter une sauvegarde
-buttonImportBackup: Importer une sauvegarde…
+sectionStoredTitle: Stocké dans ce navigateur
+statProjects:
+  1: Projet
+  n: Projets
+statFolders:
+  1: Dossier
+  n: Dossiers
+statConversations:
+  1: Conversation classée
+  n: Conversations classées
+emptyTitle: Aucun dossier pour l'instant
+emptyHint: "Ouvrez un projet sur claude.ai et cliquez sur « Nouveau dossier » pour commencer votre nid."
+linkOpenClaude: Ouvrir claude.ai
+buttonExportBackup: Exporter
+buttonImportBackup: Importer…
 importDropHint: Vous pouvez aussi déposer un fichier de sauvegarde ici.
 exportDone: "$1, $2, $3 exportés dans $4."
 exportFailed: La sauvegarde n'a pas pu être créée. Réessayez.
@@ -89,18 +102,15 @@ backupErrorInvalidProjects: La liste des projets de cette sauvegarde est invalid
 backupErrorInvalidProjectId: Le projet $1 de cette sauvegarde n'a pas d'identifiant de projet claude.ai valide. Rien n'a été importé.
 backupErrorDuplicateProjectId: Le projet $1 de cette sauvegarde apparaît deux fois. Rien n'a été importé.
 backupErrorInvalidProject: Les dossiers du projet $1 de cette sauvegarde sont invalides. Rien n'a été importé.
-copyFailed: La copie a échoué. Le diagnostic est sélectionné ci-dessous ; copiez-le au clavier.
 sectionDangerTitle: Zone de danger
-deleteAllDescription: Supprime les dossiers de tous les projets et vos paramètres de ce navigateur.
+deleteAllDescription: Efface tous les dossiers et paramètres.
 buttonDeleteAll: Supprimer toutes les données
 deleteAllConfirm: Supprimer tous les dossiers et paramètres ? Cette action est irréversible.
 deleteAllDone: Toutes les données ont été supprimées.
 deleteAllFailed: Les données n'ont pas pu être supprimées. Réessayez.
 footerSource: Code source sur GitHub
 footerNotAffiliated: Non affilié à Anthropic.
-popupVersion: Version $1
-buttonCopyDiagnostic: Copier le diagnostic
-diagnosticCopied: "Diagnostic copié : collez-le dans votre rapport de bug."
+popupVersion: v$1
 buttonOpenBackupPage: Exporter ou importer…
 backupTabHint: S'ouvre dans un onglet, car Firefox ferme ce menu à l'ouverture d'une boîte de dialogue de fichier.
 backupPageTitle: Sauvegarde Nest for Claude

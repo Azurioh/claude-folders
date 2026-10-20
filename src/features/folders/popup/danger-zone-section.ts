@@ -2,8 +2,8 @@ import { i18n } from '#i18n';
 import type { FoldersSnapshotStore } from '@/features/folders/domain/folders-snapshot.store';
 import { showInlineConfirmation } from '@/features/folders/popup/inline-confirmation';
 import {
-  createActions,
   createSection,
+  createSectionHeading,
   createStatus,
   setStatus,
 } from '@/features/folders/popup/popup-controls';
@@ -11,6 +11,7 @@ import { createElement } from '@/features/folders/ui/element';
 import { createPanelButton } from '@/features/folders/ui/panel-controls';
 
 const CONFIRMATION_ID = 'nfc-delete-all-question';
+const TITLE_ID = 'nfc-danger-title';
 
 async function deleteAll(params: {
   store: FoldersSnapshotStore;
@@ -28,8 +29,8 @@ async function deleteAll(params: {
 }
 
 /**
- * Builds the "Danger zone" section: deleting every project's folders and the settings, after an
- * inline confirmation whose Cancel button is focused.
+ * Builds the "Danger zone" section, kept quiet at the bottom of the menu: deleting every
+ * project's folders and the settings, after an inline confirmation whose Cancel button is focused.
  * @param params.document - The owner document.
  * @param params.store - Whole-storage access.
  * @param params.onDeleted - Called once the data is deleted.
@@ -63,10 +64,25 @@ export function dangerZoneSection(params: {
   });
   return createSection({
     document,
-    id: 'nfc-danger-title',
-    title: i18n.t('sectionDangerTitle'),
-    description: i18n.t('deleteAllDescription'),
-    danger: true,
-    children: [createActions({ document, children: [deleteButton] }), confirmationArea, status],
+    id: TITLE_ID,
+    className: 'nfc-card-danger',
+    children: [
+      createElement({
+        document,
+        tag: 'div',
+        className: 'nfc-danger-row',
+        children: [
+          createSectionHeading({
+            document,
+            id: TITLE_ID,
+            title: i18n.t('sectionDangerTitle'),
+            description: i18n.t('deleteAllDescription'),
+          }),
+          deleteButton,
+        ],
+      }),
+      confirmationArea,
+      status,
+    ],
   });
 }
