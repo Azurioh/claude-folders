@@ -7,15 +7,15 @@
 > Nested folders for your claude.ai conversations — organized per project, stored only in your browser.
 
 <p align="center">
-  <a href="#install"><img src="https://img.shields.io/badge/Chrome_Web_Store-coming_soon-lightgrey?logo=googlechrome&logoColor=white" alt="Chrome Web Store: coming soon"></a>
-  <a href="#install"><img src="https://img.shields.io/badge/Firefox_Add--ons-coming_soon-lightgrey?logo=firefoxbrowser&logoColor=white" alt="Firefox Add-ons: coming soon"></a>
+  <a href="#install"><img src="https://img.shields.io/badge/Chrome_Web_Store-coming_soon-lightgrey?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Web Store: coming soon"></a>
+  <a href="#install"><img src="https://img.shields.io/badge/Firefox_Add--ons-coming_soon-lightgrey?style=flat-square&logo=firefoxbrowser&logoColor=white" alt="Firefox Add-ons: coming soon"></a>
   <br>
-  <a href="https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml"><img src="https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Azurioh/nest-for-claude/ci.yml?branch=main&style=flat-square&label=CI" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Azurioh/nest-for-claude?style=flat-square&color=161b22" alt="License: MIT"></a>
+  <a href="tsconfig.json"><img src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript strict"></a>
+  <a href="wxt.config.ts"><img src="https://img.shields.io/badge/Manifest-V3-161b22?style=flat-square" alt="Manifest V3"></a>
+  <a href="https://wxt.dev/"><img src="https://img.shields.io/badge/built%20with-WXT-161b22?style=flat-square" alt="Built with WXT"></a>
 </p>
-
-Nest for Claude is an open-source browser extension for Chrome and Firefox (Manifest V3) that adds
-folders and sub-folders of conversations, per project, to the claude.ai sidebar and project page.
 
 <p align="center">
   <img src="docs/store/2560x1600/1-nested-folders.png" width="800" alt="A claude.ai project page with a Marketing folder containing a Launch sub-folder and conversations">
@@ -26,22 +26,34 @@ folders and sub-folders of conversations, per project, to the claude.ai sidebar 
 > by Anthropic**. "Claude" is a trademark of Anthropic, PBC, used here only to describe what the
 > extension works with.
 
+## Why
+
+claude.ai projects only offer a flat list of conversations, so long-running projects quickly
+become hard to navigate. Nest for Claude is an open-source browser extension for Chrome and
+Firefox (Manifest V3) that adds folders and sub-folders of conversations, per project, to the
+claude.ai sidebar and project page. Everything stays in your browser: no account, no server, no
+network requests.
+
 ## Features
 
-- Folders and nested sub-folders of conversations, scoped to each claude.ai project, shown in the
-  sidebar and on the project page.
-- Drag and drop conversations and folders, or file them from the "Add conversations" panel.
-- Start a new session from a folder: it is filed there as soon as you send the first message.
-- Custom folder names, colours and emojis, following claude.ai's light and dark themes.
-- A menu on the extension's toolbar icon (active on claude.ai only):
+- **Nested folders**: folders and sub-folders of conversations, as deep as needed, scoped to each
+  claude.ai project.
+- **In place**: folders are shown in the claude.ai sidebar and on the project page, and follow
+  claude.ai's light and dark themes.
+- **New session in a folder**: start a session from a folder; it is filed there as soon as the
+  first message is sent.
+- **Drag and drop**: move conversations and folders, or file conversations from the "Add
+  conversations" panel.
+- **Appearance**: custom folder names, colors and emojis.
+- **Toolbar menu** (enabled on claude.ai tabs only):
   - see how many projects, folders and filed conversations are stored;
   - hide filed conversations from claude.ai's lists (or just dim them);
   - backup and restore: export all your folders to a JSON file and import them back, with a full
     validation of the file and a confirmation before anything is replaced (on Firefox, backups
     open in a tab, see [#21](https://github.com/Azurioh/nest-for-claude/issues/21));
   - delete all data.
-- English and French interface.
-- 100% local: no account, no server, no network requests, no analytics.
+- **Languages**: English and French interface.
+- **Local only**: no account, no server, no network requests, no analytics.
 
 <table>
   <tr>
@@ -80,20 +92,47 @@ pnpm build:firefox  # Firefox -> dist/firefox-mv3
 - **Firefox**: open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and
   select `dist/firefox-mv3/manifest.json`.
 
-## Development quick start
+## Usage
 
-```sh
-pnpm install
-pnpm dev            # Chrome with hot reload
-pnpm dev:firefox    # Firefox with hot reload
-pnpm check          # lint + typecheck + tests
+1. Open a project on [claude.ai](https://claude.ai). A folders section appears above the project
+   page's "Recents" list and at the top of the expanded project in the sidebar.
+2. Click **New folder** to create a folder. Hover or focus a folder row to reveal its actions: new
+   session in this folder (`+`), new sub-folder, add conversations, edit (name, emoji, color) and
+   delete.
+3. Drag a conversation onto a folder to file it, or drag a folder onto another one to nest it. Drop
+   onto a section header to move a folder to the top level or take a conversation out of its
+   folder.
+4. Click the extension's toolbar icon on a claude.ai tab to see stored counts, toggle hiding of
+   filed conversations, export or import a backup, or delete all data.
+
+## How it works
+
+```mermaid
+flowchart LR
+  page[claude.ai page] --> cs[Content script]
+  cs --> dom[shared/claude-dom<br/>DOM adapter]
+  cs --> ui[folders/ui<br/>sections and panels]
+  ui --> dom
+  ui --> domain[folders/domain<br/>pure tree operations]
+  ui --> storage[folders/storage<br/>repository]
+  storage --> local[(browser.storage.local)]
+  popup[Toolbar popup] --> backup[folders/backup<br/>JSON export / import]
+  backup --> storage
+  bg[Background] -.->|enables action on claude.ai only| popup
 ```
 
-Development builds are named **Nest for Claude (dev)** so they are easy to tell apart from a store
-install. See [CONTRIBUTING.md](CONTRIBUTING.md) for all scripts and
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the code is organized.
+- The content script runs on `https://claude.ai/*`. `shared/claude-dom` is the only code that
+  knows claude.ai's DOM (selectors, sidebar and "Recents" detection, title extraction), tested
+  against HTML fixtures.
+- The UI loads the folder tree of each displayed project from storage, renders it next to
+  claude.ai's own lists, and sends user actions through a pure domain operation, then a save.
+  Floating panels render in a Shadow DOM so claude.ai's styles and the extension's do not collide.
+- Storage uses one `browser.storage.local` key per project, versioned and validated on load; other
+  tabs re-render on changes.
 
-## Privacy
+Full details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+### Privacy and permissions
 
 - Data is stored only in your browser (`browser.storage.local`): folder names, colors, emojis, and
   the IDs and titles of the conversations you file.
@@ -103,12 +142,42 @@ install. See [CONTRIBUTING.md](CONTRIBUTING.md) for all scripts and
 Export, restore or delete your data from the menu of the extension's toolbar icon. Full details:
 [PRIVACY.md](PRIVACY.md).
 
-## Contributing
+## Project structure
 
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
-[Code of Conduct](CODE_OF_CONDUCT.md). Security issues: see [SECURITY.md](SECURITY.md).
+```
+src/
+  entrypoints/              # background, claude.ai content script, toolbar popup, Firefox backup page
+  features/folders/
+    domain/                 # pure TS folder tree operations and ports, no DOM, no browser APIs
+    storage/                # repository over browser.storage, versioned schema and validation
+    ids/                    # folder id provider (crypto.randomUUID)
+    backup/                 # backup file format: serialization, Zod validation, size-checked reading
+    ui/                     # folder sections, drag and drop and floating panels on claude.ai
+    popup/                  # toolbar popup and backup page
+  features/toolbar-action/  # keeps the toolbar action enabled on claude.ai tabs only
+  shared/claude-dom/        # the only code that knows claude.ai's DOM
+  locales/                  # en.yml, fr.yml
+tests/                      # Vitest suites mirroring src/, plus sanitized claude.ai HTML fixtures
+docs/                       # architecture, store listing, brand and store assets
+```
 
-## Building the Firefox sources archive (AMO reviewers)
+## Development
+
+```sh
+pnpm install
+pnpm dev            # Chrome with hot reload
+pnpm dev:firefox    # Firefox with hot reload
+pnpm lint           # Biome
+pnpm typecheck      # wxt prepare + tsc --noEmit
+pnpm test           # Vitest
+pnpm check          # lint + typecheck + tests
+```
+
+Development builds are named **Nest for Claude (dev)** so they are easy to tell apart from a store
+install. See [CONTRIBUTING.md](CONTRIBUTING.md) for all scripts and
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the code is organized.
+
+### Firefox sources archive (AMO reviewers)
 
 ```sh
 pnpm install
@@ -117,6 +186,11 @@ pnpm zip:firefox
 
 This produces the extension zip and a sources zip in `dist/`; the build output is identical to
 `pnpm build:firefox`.
+
+## Contributing
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md). Security issues: see [SECURITY.md](SECURITY.md).
 
 ## License
 
