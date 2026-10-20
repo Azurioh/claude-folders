@@ -1,25 +1,32 @@
 import { createElement } from '@/features/folders/ui/element';
 
+/** Size, in pixels, of the icon inside a popup button. */
+export const BUTTON_ICON_SIZE = 16;
+
+/** Size, in pixels, of the icon after a popup text link. */
+export const LINK_ICON_SIZE = 12;
+
 /** Look of a status message: neutral news or a failure. */
 export type StatusTone = 'info' | 'error';
 
+/** The logo, served from the extension root; the 96px file keeps it crisp on HiDPI screens. */
+const LOGO_SOURCE = '/icon-48.png';
+const LOGO_SOURCE_SET = '/icon-48.png 1x, /icon-96.png 2x';
+const LOGO_SIZE = '36';
+
 /**
- * Builds a settings section: a heading, an optional description and the section's content.
+ * Builds the heading block of a section: its title and an optional one-line explanation.
  * @param params.document - The owner document.
  * @param params.id - The heading id, naming the section for assistive technologies.
  * @param params.title - The heading text.
  * @param params.description - The explanation under the heading, or `null`.
- * @param params.danger - Whether the section holds destructive actions (red accent).
- * @param params.children - The section's controls.
- * @returns The section element.
+ * @returns The heading block.
  */
-export function createSection(params: {
+export function createSectionHeading(params: {
   document: Document;
   id: string;
   title: string;
   description: string | null;
-  danger: boolean;
-  children: readonly Node[];
 }): HTMLElement {
   const { document, id, title, description } = params;
   const heading = createElement({
@@ -35,10 +42,32 @@ export function createSection(params: {
       : [createElement({ document, tag: 'p', className: 'nfc-muted', children: [description] })];
   return createElement({
     document,
+    tag: 'div',
+    className: 'nfc-section-heading',
+    children: [heading, ...intro],
+  });
+}
+
+/**
+ * Builds a settings section: a card named by its heading block and holding the section's content.
+ * @param params.document - The owner document.
+ * @param params.id - The heading id, naming the section for assistive technologies.
+ * @param params.className - Classes added after `nfc-card`, or an empty string.
+ * @param params.children - The heading block and the section's controls.
+ * @returns The section element.
+ */
+export function createSection(params: {
+  document: Document;
+  id: string;
+  className: string;
+  children: readonly Node[];
+}): HTMLElement {
+  return createElement({
+    document: params.document,
     tag: 'section',
-    className: params.danger ? 'nfc-card nfc-card-danger' : 'nfc-card',
-    attributes: { 'aria-labelledby': id },
-    children: [heading, ...intro, ...params.children],
+    className: `nfc-card ${params.className}`.trim(),
+    attributes: { 'aria-labelledby': params.id },
+    children: params.children,
   });
 }
 
@@ -86,7 +115,7 @@ export function createActions(params: {
 }
 
 /**
- * Builds the header of an extension page: its title and a short line under or beside it.
+ * Builds the header of an extension page: the logo, its title and a short line beside it.
  * @param params.document - The owner document.
  * @param params.titleId - The `h1` id, for `aria-labelledby`.
  * @param params.title - The `h1` text.
@@ -107,12 +136,36 @@ export function createHeader(params: {
     children: [
       createElement({
         document,
-        tag: 'h1',
-        className: 'nfc-title',
-        attributes: { id: params.titleId },
-        children: [params.title],
+        tag: 'img',
+        className: 'nfc-logo',
+        attributes: {
+          src: LOGO_SOURCE,
+          srcset: LOGO_SOURCE_SET,
+          width: LOGO_SIZE,
+          height: LOGO_SIZE,
+          alt: '',
+        },
       }),
-      createElement({ document, tag: 'p', className: 'nfc-subtitle', children: [params.subtitle] }),
+      createElement({
+        document,
+        tag: 'div',
+        className: 'nfc-header-text',
+        children: [
+          createElement({
+            document,
+            tag: 'h1',
+            className: 'nfc-title',
+            attributes: { id: params.titleId },
+            children: [params.title],
+          }),
+          createElement({
+            document,
+            tag: 'p',
+            className: 'nfc-subtitle',
+            children: [params.subtitle],
+          }),
+        ],
+      }),
     ],
   });
 }

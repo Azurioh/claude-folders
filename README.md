@@ -23,12 +23,12 @@ folders and sub-folders of conversations, per project, to the claude.ai sidebar 
 - Folders shown in the claude.ai sidebar and on the project page.
 - Custom folder names, colors and emojis.
 - A menu on the extension's toolbar icon:
+  - see how many projects, folders and filed conversations are stored;
   - hide filed conversations from claude.ai's lists (or just dim them);
   - backup and restore: export all your folders to a JSON file and import them back, with a full
     validation of the file and a confirmation before anything is replaced (on Firefox, backups
     open in a tab);
-  - delete all data;
-  - copy a diagnostic for bug reports (versions and counts only, no ids or titles).
+  - delete all data.
 - English and French interface.
 - 100% local: no account, no server, no network requests, no analytics.
 

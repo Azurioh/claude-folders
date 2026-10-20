@@ -46,15 +46,6 @@ after asking you to confirm that it replaces your current folders.
   click **Delete all data** and confirm. Every folder of every project and your settings are removed
   from your browser.
 
-## Diagnostic
-
-**Copy diagnostic**, in the menu of the extension's icon, copies a text to paste into a bug
-report. It only leaves your browser if you paste it somewhere yourself. It contains the extension
-and browser versions (browser name and major version only), how many projects, folders and filed
-conversations are stored, your display setting, and, when a claude.ai tab is open, how many
-conversation and project links the extension detects there and which kind of page it is. It never
-contains conversation or project IDs, titles, folder names or conversation content.
-
 ## Changes
 
 Any change to this policy is made in this file and visible in the repository history.

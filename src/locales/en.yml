@@ -54,10 +54,10 @@ conversationUntitled: Untitled
 newSessionChip: "Will be filed in $1"
 newSessionCancel: "Do not file the new session in “$1”"
 sectionDisplayTitle: Display
-hideFiledLabel: Hide filed conversations in claude.ai lists
-hideFiledHint: "On: conversations you put in a folder are hidden from claude.ai's own lists. Off: they stay there, dimmed."
+hideFiledLabel: Hide filed conversations
+hideFiledHint: "On: hidden from claude.ai's lists. Off: shown there, dimmed."
 sectionBackupTitle: Backup
-backupDescription: Save all your folders to a file, or restore them from one. The file stays on your device.
+backupDescription: A file of all your folders, kept on your device.
 countProjects:
   1: 1 project
   n: $1 projects
@@ -68,8 +68,21 @@ countConversations:
   1: 1 filed conversation
   n: $1 filed conversations
 storedSummary: "Stored in this browser: $1, $2, $3."
-buttonExportBackup: Export backup
-buttonImportBackup: Import backup…
+sectionStoredTitle: Stored in this browser
+statProjects:
+  1: Project
+  n: Projects
+statFolders:
+  1: Folder
+  n: Folders
+statConversations:
+  1: Filed conversation
+  n: Filed conversations
+emptyTitle: No folders yet
+emptyHint: "Open a project on claude.ai and click “New folder” to start your nest."
+linkOpenClaude: Open claude.ai
+buttonExportBackup: Export
+buttonImportBackup: Import…
 importDropHint: You can also drop a backup file here.
 exportDone: "Exported $1, $2, $3 to $4."
 exportFailed: The backup could not be created. Try again.
@@ -89,18 +102,15 @@ backupErrorInvalidProjects: The project list of this backup is invalid. Nothing 
 backupErrorInvalidProjectId: Project $1 of this backup does not have a valid claude.ai project id. Nothing was imported.
 backupErrorDuplicateProjectId: Project $1 of this backup is listed twice. Nothing was imported.
 backupErrorInvalidProject: The folders of project $1 in this backup are invalid. Nothing was imported.
-copyFailed: Copy failed. The diagnostic is selected below; copy it with your keyboard.
 sectionDangerTitle: Danger zone
-deleteAllDescription: Deletes the folders of every project and your settings from this browser.
+deleteAllDescription: Erases all folders and settings.
 buttonDeleteAll: Delete all data
 deleteAllConfirm: Delete all folders and settings? This cannot be undone.
 deleteAllDone: All data was deleted.
 deleteAllFailed: The data could not be deleted. Try again.
-footerSource: Source code on GitHub
+footerSource: Source on GitHub
 footerNotAffiliated: Not affiliated with Anthropic.
-popupVersion: Version $1
-buttonCopyDiagnostic: Copy diagnostic
-diagnosticCopied: "Diagnostic copied: paste it into your bug report."
+popupVersion: v$1
 buttonOpenBackupPage: Export or import…
 backupTabHint: Opens in a tab, because Firefox closes this menu when a file dialog opens.
 backupPageTitle: Nest for Claude backup

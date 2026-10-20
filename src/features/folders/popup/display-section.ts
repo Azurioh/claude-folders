@@ -1,13 +1,14 @@
 import { i18n } from '#i18n';
-import { createSection } from '@/features/folders/popup/popup-controls';
+import { createSection, createSectionHeading } from '@/features/folders/popup/popup-controls';
 import type { BrowserHideFiledSetting } from '@/features/folders/storage/browser-hide-filed.setting';
 import { createElement } from '@/features/folders/ui/element';
 
-/** The setting as the options page uses it. */
+/** The setting as the popup uses it. */
 export type HideFiledControl = Pick<BrowserHideFiledSetting, 'load' | 'save' | 'watch'>;
 
 const SWITCH_ID = 'nfc-hide-filed';
 const HINT_ID = 'nfc-hide-filed-hint';
+const TITLE_ID = 'nfc-display-title';
 
 /** A rendered section that listens to storage until stopped. */
 export type LiveSection = { readonly element: HTMLElement; stop(): void };
@@ -72,11 +73,17 @@ export function displaySection(params: {
   return {
     element: createSection({
       document,
-      id: 'nfc-display-title',
-      title: i18n.t('sectionDisplayTitle'),
-      description: null,
-      danger: false,
-      children: [row],
+      id: TITLE_ID,
+      className: 'nfc-card-display',
+      children: [
+        createSectionHeading({
+          document,
+          id: TITLE_ID,
+          title: i18n.t('sectionDisplayTitle'),
+          description: null,
+        }),
+        row,
+      ],
     }),
     stop,
   };

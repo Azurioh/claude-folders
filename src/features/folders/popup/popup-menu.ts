@@ -1,15 +1,14 @@
 import { i18n } from '#i18n';
 import type { FoldersSnapshotStore } from '@/features/folders/domain/folders-snapshot.store';
 import { backupLinkSection } from '@/features/folders/popup/backup-link-section';
-import { type BackupSection, backupSection } from '@/features/folders/popup/backup-section';
+import { backupSection } from '@/features/folders/popup/backup-section';
 import { dangerZoneSection } from '@/features/folders/popup/danger-zone-section';
-import { collectDiagnostic } from '@/features/folders/popup/diagnostic-collector';
-import { type DiagnosticCopy, diagnosticCopy } from '@/features/folders/popup/diagnostic-copy';
 import { displaySection, type HideFiledControl } from '@/features/folders/popup/display-section';
 import type { DownloadedFile } from '@/features/folders/popup/file-download';
-import { createHeader } from '@/features/folders/popup/popup-controls';
+import { createHeader, LINK_ICON_SIZE } from '@/features/folders/popup/popup-controls';
+import { storedOverview } from '@/features/folders/popup/stored-overview';
 import { createElement } from '@/features/folders/ui/element';
-import type { DomDiagnostic } from '@/shared/claude-dom/diagnostic';
+import { createIcon } from '@/features/folders/ui/icons';
 
 const REPOSITORY_URL = 'https://github.com/Azurioh/nest-for-claude';
 const TITLE_ID = 'nfc-popup-title';
@@ -33,24 +32,20 @@ type PopupMenuParams = {
   root: HTMLElement;
   store: FoldersSnapshotStore;
   hideFiled: HideFiledControl;
-  pageDiagnostic: () => Promise<DomDiagnostic | null>;
   extensionVersion: string;
-  userAgent: string;
   locale: string;
   now: () => Date;
   backup: PopupBackupMode;
-  copyText: (text: string) => Promise<void>;
 };
 
 function createBackupSection(params: {
   menu: PopupMenuParams;
   onImported: () => void;
-}): BackupSection {
+}): HTMLElement {
   const { menu } = params;
   if (menu.backup.kind === 'tab') {
     return backupLinkSection({
       document: menu.document,
-      store: menu.store,
       openBackupPage: menu.backup.openBackupPage,
     });
   }
@@ -65,84 +60,62 @@ function createBackupSection(params: {
   });
 }
 
-function footer(params: { document: Document; diagnostic: DiagnosticCopy }): HTMLElement {
-  const { document } = params;
+function footer(document: Document): HTMLElement {
   return createElement({
     document,
     tag: 'footer',
     className: 'nfc-footer',
     children: [
-      params.diagnostic.element,
       createElement({
         document,
-        tag: 'div',
-        className: 'nfc-footer-links',
+        tag: 'a',
+        className: 'nfc-link',
+        attributes: { href: REPOSITORY_URL, target: '_blank', rel: 'noopener noreferrer' },
         children: [
-          createElement({
-            document,
-            tag: 'a',
-            className: 'nfc-link',
-            attributes: { href: REPOSITORY_URL, target: '_blank', rel: 'noopener noreferrer' },
-            children: [i18n.t('footerSource')],
-          }),
-          createElement({
-            document,
-            tag: 'p',
-            className: 'nfc-fineprint',
-            children: [i18n.t('footerNotAffiliated')],
-          }),
+          i18n.t('footerSource'),
+          createIcon({ document, name: 'external', size: LINK_ICON_SIZE, className: '' }),
         ],
+      }),
+      createElement({
+        document,
+        tag: 'p',
+        className: '',
+        children: [i18n.t('footerNotAffiliated')],
       }),
     ],
   });
 }
 
 /**
- * Renders the toolbar popup: header (name, version), "Display", "Backup" and "Danger zone"
- * sections, and a footer with "Copy diagnostic" and the links. Focus starts on the menu itself,
- * so the first Tab reaches the first control and nothing is toggled by accident. Every browser
- * API is injected, so the popup runs against fakes in tests.
+ * Renders the toolbar popup: header (logo, name, version), the "Stored in this browser"
+ * overview, the "Display", "Backup" and "Danger zone" sections, and a footer with the links.
+ * Focus starts on the menu itself, so the first Tab reaches the first control and nothing is
+ * toggled by accident. Every browser API is injected, so the popup runs against fakes in tests.
  * @param params.document - The popup document.
  * @param params.root - The element the popup renders into; its content is replaced.
- * @param params.store - Whole-storage access (backup, deletion, counts).
+ * @param params.store - Whole-storage access (overview, backup, deletion).
  * @param params.hideFiled - The display setting.
- * @param params.pageDiagnostic - Asks an open claude.ai tab for its page diagnostic.
  * @param params.extensionVersion - The manifest version.
- * @param params.userAgent - `navigator.userAgent`.
- * @param params.locale - The interface language, for dates.
+ * @param params.locale - The interface language, for numbers and dates.
  * @param params.now - The clock dating exports.
  * @param params.backup - Where export and import run.
- * @param params.copyText - Writes text to the clipboard.
  * @returns The popup, to stop its storage watches.
  */
 export function startPopupMenu(params: PopupMenuParams): PopupMenu {
   const { document, store } = params;
+  const overview = storedOverview({ document, store, locale: params.locale });
   const display = displaySection({ document, setting: params.hideFiled });
-  const diagnostic = diagnosticCopy({
-    document,
-    collect: () => collectDiagnostic(params),
-    copyText: params.copyText,
-  });
-  const backup = createBackupSection({
-    menu: params,
-    onImported: () => {
-      void diagnostic.refresh();
-    },
-  });
-  const dangerZone = dangerZoneSection({
-    document,
-    store,
-    onDeleted: () => {
-      void backup.refreshCounts();
-      void diagnostic.refresh();
-    },
-  });
+  const refreshOverview = () => {
+    void overview.refresh();
+  };
+  const backup = createBackupSection({ menu: params, onImported: refreshOverview });
+  const dangerZone = dangerZoneSection({ document, store, onDeleted: refreshOverview });
   const main = createElement({
     document,
     tag: 'main',
     className: 'nfc-main',
     attributes: { tabindex: '-1', 'aria-labelledby': TITLE_ID },
-    children: [display.element, backup.element, dangerZone],
+    children: [overview.element, display.element, backup, dangerZone],
   });
   const header = createHeader({
     document,
@@ -150,7 +123,7 @@ export function startPopupMenu(params: PopupMenuParams): PopupMenu {
     title: i18n.t('extName'),
     subtitle: i18n.t('popupVersion', [params.extensionVersion]),
   });
-  params.root.replaceChildren(header, main, footer({ document, diagnostic }));
-  main.focus();
+  params.root.replaceChildren(header, main, footer(document));
+  main.focus({ preventScroll: true });
   return { stop: display.stop };
 }

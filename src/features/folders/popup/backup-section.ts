@@ -2,32 +2,28 @@ import { i18n } from '#i18n';
 import { backupFileName, serializeBackup } from '@/features/folders/backup/backup-file';
 import type { ParsedBackup } from '@/features/folders/backup/backup-file.parser';
 import { readBackupFile } from '@/features/folders/backup/backup-file.reader';
-import { countSnapshot, type SnapshotCounts } from '@/features/folders/domain/folders-snapshot';
+import { countSnapshot } from '@/features/folders/domain/folders-snapshot';
 import type { FoldersSnapshotStore } from '@/features/folders/domain/folders-snapshot.store';
 import { backupErrorText } from '@/features/folders/popup/backup-error.text';
 import type { DownloadedFile } from '@/features/folders/popup/file-download';
 import { showInlineConfirmation } from '@/features/folders/popup/inline-confirmation';
 import {
-  createActions,
+  BUTTON_ICON_SIZE,
   createSection,
+  createSectionHeading,
   createStatus,
   setStatus,
 } from '@/features/folders/popup/popup-controls';
 import { countsText, storedSummaryText } from '@/features/folders/popup/snapshot-counts.text';
 import { createElement } from '@/features/folders/ui/element';
+import { createIcon } from '@/features/folders/ui/icons';
 import { createPanelButton } from '@/features/folders/ui/panel-controls';
 
 const ACCEPTED_FILE_TYPES = '.json,application/json';
 const FILES_DRAG_TYPE = 'Files';
 const CONFIRMATION_ID = 'nfc-import-question';
+const TITLE_ID = 'nfc-backup-title';
 const EXPORTED_AT_FORMAT: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'short' };
-
-/** The "Backup" section, with the stored counts it shows. */
-export type BackupSection = {
-  readonly element: HTMLElement;
-  /** Reads the storage again and shows its counts. */
-  refreshCounts(): Promise<void>;
-};
 
 type BackupSectionParams = {
   document: Document;
@@ -41,11 +37,9 @@ type BackupSectionParams = {
 
 type BackupParts = {
   readonly params: BackupSectionParams;
-  readonly summary: HTMLElement;
   readonly status: HTMLElement;
   readonly importArea: HTMLElement;
   readonly importButton: HTMLButtonElement;
-  readonly showCounts: (counts: SnapshotCounts) => void;
 };
 
 async function exportBackup(parts: BackupParts): Promise<void> {
@@ -55,11 +49,9 @@ async function exportBackup(parts: BackupParts): Promise<void> {
     const exportedAt = params.now();
     const fileName = backupFileName(exportedAt);
     params.saveFile({ fileName, content: serializeBackup({ snapshot, exportedAt }) });
-    const counts = countSnapshot(snapshot);
-    parts.showCounts(counts);
     setStatus({
       status,
-      text: i18n.t('exportDone', [...countsText(counts), fileName]),
+      text: i18n.t('exportDone', [...countsText(countSnapshot(snapshot)), fileName]),
       tone: 'info',
     });
   } catch {
@@ -75,7 +67,6 @@ async function replaceWithBackup(params: {
   try {
     await parts.params.store.replace(backup.snapshot);
     const counts = countSnapshot(await parts.params.store.read());
-    parts.showCounts(counts);
     setStatus({
       status: parts.status,
       text: i18n.t('importDone', countsText(counts)),
@@ -186,8 +177,21 @@ function importControls(params: {
   return zone;
 }
 
+function iconButton(params: {
+  document: Document;
+  icon: 'download' | 'upload';
+  label: string;
+  variant: 'primary' | 'secondary';
+  onPress: () => void;
+}): HTMLButtonElement {
+  const { document, icon, ...button } = params;
+  const element = createPanelButton({ document, ...button });
+  element.prepend(createIcon({ document, name: icon, size: BUTTON_ICON_SIZE, className: '' }));
+  return element;
+}
+
 /**
- * Builds the "Backup" section: the stored counts, export to a dated JSON file, and import from
+ * Builds the "Backup" section: export to a dated JSON file (the primary action), and import from
  * a picked (or dropped) file, validated in full and applied only after an inline confirmation.
  * @param params.document - The owner document.
  * @param params.store - Whole-storage access.
@@ -197,11 +201,10 @@ function importControls(params: {
  * @param params.acceptDrops - Whether a backup file can also be dropped on the section (a full
  * page); in the toolbar popup, dragging a file from elsewhere would close it first.
  * @param params.onImported - Called once a backup replaced the stored data.
- * @returns The section and its counts refresher.
+ * @returns The section element.
  */
-export function backupSection(params: BackupSectionParams): BackupSection {
+export function backupSection(params: BackupSectionParams): HTMLElement {
   const { document } = params;
-  const summary = createElement({ document, tag: 'p', className: 'nfc-summary' });
   const status = createStatus(document);
   const importArea = createElement({ document, tag: 'div', className: 'nfc-import-area' });
   const fileInput = createElement({
@@ -215,26 +218,19 @@ export function backupSection(params: BackupSectionParams): BackupSection {
       'aria-hidden': 'true',
     },
   });
-  const importButton = createPanelButton({
+  const importButton = iconButton({
     document,
+    icon: 'upload',
     label: i18n.t('buttonImportBackup'),
     variant: 'secondary',
     onPress: () => {
       fileInput.click();
     },
   });
-  const parts: BackupParts = {
-    params,
-    summary,
-    status,
-    importArea,
-    importButton,
-    showCounts: (counts) => {
-      summary.textContent = storedSummaryText(counts);
-    },
-  };
-  const exportButton = createPanelButton({
+  const parts: BackupParts = { params, status, importArea, importButton };
+  const exportButton = iconButton({
     document,
+    icon: 'download',
     label: i18n.t('buttonExportBackup'),
     variant: 'primary',
     onPress: () => {
@@ -254,22 +250,31 @@ export function backupSection(params: BackupSectionParams): BackupSection {
   const controls = importControls({
     document,
     acceptDrops: params.acceptDrops,
-    children: [createActions({ document, children: [exportButton, importButton] }), fileInput],
+    children: [
+      createElement({
+        document,
+        tag: 'div',
+        className: 'nfc-actions nfc-actions-split',
+        children: [exportButton, importButton],
+      }),
+      fileInput,
+    ],
     onFile,
   });
-  const refreshCounts = async () => {
-    parts.showCounts(countSnapshot(await params.store.read()));
-  };
-  void refreshCounts();
-  return {
-    element: createSection({
-      document,
-      id: 'nfc-backup-title',
-      title: i18n.t('sectionBackupTitle'),
-      description: i18n.t('backupDescription'),
-      danger: false,
-      children: [summary, controls, importArea, status],
-    }),
-    refreshCounts,
-  };
+  return createSection({
+    document,
+    id: TITLE_ID,
+    className: '',
+    children: [
+      createSectionHeading({
+        document,
+        id: TITLE_ID,
+        title: i18n.t('sectionBackupTitle'),
+        description: i18n.t('backupDescription'),
+      }),
+      controls,
+      importArea,
+      status,
+    ],
+  });
 }
