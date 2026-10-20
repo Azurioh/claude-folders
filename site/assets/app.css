@@ -190,10 +190,10 @@ fieldset {
   border-radius: 6px;
 }
 .wrap {
-  max-width: 1200px;
+  max-width: 1440px;
   margin-inline: auto;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px), 3vw);
+  padding-right: max(16px, env(safe-area-inset-right, 0px), 3vw);
 }
 .eyebrow {
   font: 500 12px / 1 var(--f-mono);
@@ -432,11 +432,11 @@ footer a:hover {
   );
 }
 
-/* Hero: pitch on the left, a live claude.ai page bleeding off the right edge */
+/* Hero: pitch on the left, a live claude.ai page filling the right column */
 .hero .wrap {
   display: grid;
-  grid-template-columns: minmax(0, 470px) minmax(0, 1fr);
-  gap: 56px;
+  grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+  gap: 72px;
   align-items: center;
   padding-block: 72px 88px;
 }
@@ -446,12 +446,12 @@ footer a:hover {
   min-width: 0;
 }
 .hero h1 {
-  font-size: clamp(42px, 5vw, 68px);
+  font-size: clamp(42px, 4.6vw, 76px);
 }
 .hero .lede {
   font-size: 19px;
   color: var(--stage-muted);
-  max-width: 42ch;
+  max-width: 46ch;
 }
 .cta-row {
   display: flex;
@@ -508,7 +508,6 @@ footer a:hover {
   height: 660px;
   border-radius: 18px;
   overflow: hidden;
-  width: calc(100% + max(0px, (100vw - 1200px) / 2 - 40px));
   background: var(--cl-main);
   color: var(--cl-text);
   font: 400 15px / 1.4 var(--f-body);
