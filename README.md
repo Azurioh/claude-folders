@@ -23,20 +23,31 @@ folders and sub-folders of conversations, per project, to the claude.ai sidebar 
 
 ## Features
 
-- Folders and nested sub-folders of conversations, scoped to each claude.ai project.
-- Folders shown in the claude.ai sidebar and on the project page.
-- Custom folder names, colors and emojis.
-- A menu on the extension's toolbar icon:
+- Folders and nested sub-folders of conversations, scoped to each claude.ai project, shown in the
+  sidebar and on the project page.
+- Drag and drop conversations and folders, or file them from the "Add conversations" panel.
+- Start a new session from a folder: it is filed there as soon as you send the first message.
+- Custom folder names, colours and emojis, following claude.ai's light and dark themes.
+- A menu on the extension's toolbar icon (active on claude.ai only):
   - see how many projects, folders and filed conversations are stored;
   - hide filed conversations from claude.ai's lists (or just dim them);
   - backup and restore: export all your folders to a JSON file and import them back, with a full
     validation of the file and a confirmation before anything is replaced (on Firefox, backups
-    open in a tab);
+    open in a tab, see [#21](https://github.com/Azurioh/nest-for-claude/issues/21));
   - delete all data.
 - English and French interface.
 - 100% local: no account, no server, no network requests, no analytics.
 
-The extension is in early development; the features above land progressively.
+<table>
+  <tr>
+    <td><img src="docs/store/2560x1600/2-drag-drop.png" alt="Dragging a conversation onto a folder"></td>
+    <td><img src="docs/store/2560x1600/3-make-it-yours.png" alt="Edit folder panel with emoji grid and colour swatches"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/store/2560x1600/4-new-session.png" alt="Starting a new session that will be filed in the Marketing folder"></td>
+    <td><img src="docs/store/2560x1600/5-private.png" alt="Toolbar menu with stored data overview, display, backup and danger zone"></td>
+  </tr>
+</table>
 
 ## Install
 
