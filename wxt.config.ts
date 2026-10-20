@@ -5,6 +5,14 @@ export default defineConfig({
   outDir: 'dist',
   manifestVersion: 3,
   modules: ['@wxt-dev/i18n/module'],
+  // Vite scans every .html in the repo by default, including dist/ builds and test fixtures.
+  vite: () => ({
+    optimizeDeps: { entries: ['src/entrypoints/**/*.html'] },
+  }),
+  // The landing page and its Cloudflare config are not extension source.
+  zip: {
+    excludeSources: ['site/**', 'wrangler.jsonc'],
+  },
   manifest: ({ browser, mode }) => ({
     name: mode === 'development' ? '__MSG_extNameDev__' : '__MSG_extName__',
     description: '__MSG_extDescription__',

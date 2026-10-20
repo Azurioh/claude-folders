@@ -1,0 +1,10 @@
+// Cloudflare Worker serving the static landing page in site/ (assets only, no Worker script).
+{
+  "name": "nest-for-claude",
+  "compatibility_date": "2026-10-20",
+  "assets": {
+    "directory": "./site",
+    // One page with hash routing: unknown paths serve index.html, whose canonical URL is the root.
+    "not_found_handling": "single-page-application"
+  }
+}

@@ -398,3 +398,20 @@ panel layer when the context is invalidated.
 UI strings come from `src/locales/<lang>.yml` through `@wxt-dev/i18n` (a typed wrapper over the
 native `browser.i18n` API, which also localizes the manifest). English is the default locale;
 every key must exist in both `en.yml` and `fr.yml`.
+
+## Website
+
+The landing page lives in `site/`: static HTML, CSS and JavaScript with no build step, separate from
+the extension and never bundled by WXT. Fonts are self-hosted in `site/assets/fonts/` so the page
+makes no third-party requests, and `site/_headers` sets its security headers (strict CSP, no inline
+script). Neither `site/` nor `wrangler.jsonc` goes into the Firefox sources zip
+(`zip.excludeSources` in `wxt.config.ts`).
+
+It is deployed to <https://nest-for-claude.alancunin.fr> as an assets-only Cloudflare Worker
+configured by `wrangler.jsonc` (no Worker script; `site/` is the assets directory and `_headers` is
+applied to its responses). Workers Builds runs no build command, deploys with
+`npx wrangler deploy` and builds previews with `npx wrangler preview`; Wrangler is not a project
+dependency. Store links are set in the `LINKS` constant in
+`site/assets/app.js`; while a link is `null`, its download card shows "Coming soon" and the
+browser-aware buttons point to the download section. The page's EN/FR strings live in the `STR`
+dictionary of the same file.

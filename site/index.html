@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nest for Claude</title>
+<meta name="description" content="Organize your claude.ai conversations into nested folders per project. Free and open source browser extension for Chrome and Firefox. Stored locally, no network requests.">
+<link rel="canonical" href="https://nest-for-claude.alancunin.fr/">
+<meta name="theme-color" content="#1c1714">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
+<link rel="icon" type="image/png" sizes="128x128" href="assets/icon-128.png">
+<link rel="apple-touch-icon" href="assets/icon-128.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nest for Claude">
+<meta property="og:title" content="Nest for Claude">
+<meta property="og:description" content="Organize your claude.ai conversations into nested folders per project. Free and open source browser extension for Chrome and Firefox. Stored locally, no network requests.">
+<meta property="og:url" content="https://nest-for-claude.alancunin.fr/">
+<meta property="og:image" content="https://nest-for-claude.alancunin.fr/assets/og.png">
+<meta property="og:image:width" content="880">
+<meta property="og:image:height" content="560">
+<meta property="og:image:alt" content="Nest for Claude: nested folders for your claude.ai conversations">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Nest for Claude">
+<meta name="twitter:description" content="Organize your claude.ai conversations into nested folders per project. Free and open source browser extension for Chrome and Firefox. Stored locally, no network requests.">
+<meta name="twitter:image" content="https://nest-for-claude.alancunin.fr/assets/og.png">
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/app.js" defer></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 12a8 8 0 1 1 3.5 6.6L4 20l1.2-3.6A8 8 0 0 1 4 12Z"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-chrome" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 8.5h8.2M8.9 13.8 4.8 6.7M15 13.8l-4.1 7.1"/></symbol>
+  <symbol id="i-firefox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 9.5A9 9 0 1 1 6 4.5c-.2 1.3.1 2.4.8 3.2.8-1.8 2.5-3 4.6-3.2-.6 1.2-.4 2.3.5 3A4.5 4.5 0 0 1 16.5 12a4.5 4.5 0 0 1-8.7 1.6"/><path d="M20.5 9.5c-.8-2.4-2.6-4.4-5-5.4"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 0 0-2.8 17.5c.4.1.6-.2.6-.4v-1.6c-2.5.5-3-1.1-3-1.1-.4-1-1-1.3-1-1.3-.8-.6.1-.6.1-.6.9.1 1.4 1 1.4 1 .8 1.4 2.1 1 2.6.7.1-.6.3-1 .6-1.2-2-.2-4.1-1-4.1-4.4 0-1 .4-1.8.9-2.4-.1-.2-.4-1.1.1-2.4 0 0 .8-.2 2.5.9a8.6 8.6 0 0 1 4.5 0c1.7-1.1 2.5-.9 2.5-.9.5 1.3.2 2.2.1 2.4.6.6.9 1.4.9 2.4 0 3.4-2.1 4.2-4.1 4.4.3.3.6.8.6 1.6v2.4c0 .2.2.5.6.4A9 9 0 0 0 12 3Z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-replay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6M4 4v4.6h4.6"/></symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/icon-128.png" alt="" width="36" height="36"><span>Nest for Claude</span></a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#folders" data-i18n="nav.folders">Folders</a>
+      <a href="#drag" data-i18n="nav.drag">Drag &amp; drop</a>
+      <a href="#appearance" data-i18n="nav.appearance">Appearance</a>
+      <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
+      <a href="#download" data-i18n="nav.download">Download</a>
+    </nav>
+    <fieldset class="lang" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="fr" aria-pressed="false">FR</button>
+    </fieldset>
+    <a class="btn btn-primary js-cta" href="#download"><svg aria-hidden="true"><use href="#i-download"/></svg><span class="lbl-long js-cta-label">Download</span></a>
+  </div>
+</header>
+
+<!-- ============ LANDING ============ -->
+<main id="landing">
+  <section class="on-stage hero" id="top">
+    <div class="rays" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="eyebrow" style="color:#e08a66" data-i18n="hero.eyebrow">Browser extension for claude.ai</span>
+        <h1 class="display"><span data-i18n="hero.title">Nested folders for your Claude projects</span><span style="color:#c4623c">.</span></h1>
+        <p class="lede" data-i18n="hero.lede">Folders inside folders, right in the claude.ai sidebar and project page. Sort months of conversations in a minute. Nothing leaves your browser.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary js-cta" href="#download"><svg class="js-cta-icon" aria-hidden="true"><use href="#i-download"/></svg><span class="js-cta-label">Download</span></a>
+          <a class="alt-link" href="#download" data-i18n="hero.other">Other browsers and manual install</a>
+        </div>
+        <div class="trust"><span data-i18n="trust.oss">Open source · MIT</span><span data-i18n="trust.net">0 network requests</span><span data-i18n="trust.lang">English · Français</span></div>
+      </div>
+
+      <div class="hero-shot">
+        <div class="claude" id="claude">
+          <aside class="cl-side" aria-hidden="true">
+            <div class="cl-nav"><span class="plus"><svg aria-hidden="true"><use href="#i-plus"/></svg></span><span data-i18n="cl.new">New chat</span></div>
+            <div class="cl-nav"><svg aria-hidden="true"><use href="#i-chat"/></svg><span data-i18n="cl.chats">Chats</span></div>
+            <div class="cl-nav"><svg aria-hidden="true"><use href="#i-box"/></svg><span data-i18n="cl.projects">Projects</span></div>
+            <div class="cl-nav active"><svg aria-hidden="true"><use href="#i-box"/></svg><span data-i18n="cl.project">Product Launch</span></div>
+            <div class="cl-label"><svg aria-hidden="true"><use href="#i-chev"/></svg><span data-i18n="cl.folders">Folders</span></div>
+            <div class="side-tree tree" id="side-tree"></div>
+            <div class="cl-sep"></div>
+            <div class="cl-label" data-i18n="cl.recents">Recents</div>
+            <div class="cl-recent" data-i18n="conv.roadmap">Q3 roadmap priorities</div>
+            <div class="cl-recent" data-i18n="conv.bugs">Bug triage checklist</div>
+            <div class="cl-recent" data-i18n="conv.sync">Weekly sync notes</div>
+            <div class="cl-recent" data-i18n="conv.sql">SQL query cleanup</div>
+          </aside>
+          <div class="cl-main" aria-hidden="true">
+            <div class="cl-crumb"><span data-i18n="cl.projects">Projects</span><span>/</span><b data-i18n="cl.project">Product Launch</b><svg aria-hidden="true"><use href="#i-chev"/></svg></div>
+            <div class="cl-title" data-i18n="cl.project">Product Launch</div>
+            <div class="cl-input"><p data-i18n="cl.newIn">New session in Product Launch</p><div><svg aria-hidden="true"><use href="#i-plus"/></svg></div></div>
+            <div class="cl-sec"><span data-i18n="cl.folders">Folders</span><span id="hero-new"><svg aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="cl.newFolder">New folder</span></span></div>
+            <div class="tree" id="hero-tree"></div>
+            <div class="cl-sec"><span data-i18n="cl.recents">Recents</span><span></span></div>
+            <div class="tree" id="hero-recents"></div>
+          </div>
+          <span class="ripple" id="ripple" aria-hidden="true"></span>
+          <div class="demo-ghost" id="demo-ghost" aria-hidden="true"><svg aria-hidden="true"><use href="#i-chat"/></svg><span></span></div>
+          <svg class="demo-cursor" id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2.5v17.2l4.6-4.4 3 6.7 2.9-1.3-3-6.6 6.4-.4Z" fill="#fff" stroke="#1c1714" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section class="band" id="folders">
+    <div class="wrap split">
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="folders.eyebrow">Folders, as deep as you need</span>
+        <h2 class="display"><span data-i18n="folders.title">Your projects grew. Your sidebar didn't</span><span class="dot">.</span></h2>
+        <p data-i18n="folders.body">claude.ai lists a project's conversations in one flat column. Nest adds folders and sub-folders inside each project, so last March's research thread is three clicks away instead of a long scroll.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-item">
+          <div class="ico"><svg aria-hidden="true"><use href="#i-folder"/></svg></div>
+          <div><h3 data-i18n="f1.t">Scoped to each project</h3><p data-i18n="f1.b">Every claude.ai project keeps its own tree, shown in the sidebar and on the project page.</p></div>
+        </div>
+        <div class="feat-item">
+          <div class="ico"><svg aria-hidden="true"><use href="#i-plus"/></svg></div>
+          <div><h3 data-i18n="f2.t">New session in a folder</h3><p data-i18n="f2.b">Start a chat from a folder. It is filed there as soon as you send the first message.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="drag">
+    <div class="wrap split rev">
+      <div class="panel reveal" id="play">
+        <div class="cl-sec"><span data-i18n="cl.folders">Folders</span><span><svg aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="cl.newFolder">New folder</span></span></div>
+        <div class="tree" id="play-folders"></div>
+        <div class="cl-sec"><span data-i18n="cl.recents">Recents</span><span></span></div>
+        <div class="tree" id="play-recents"></div>
+        <div class="panel-foot"><span id="play-status" aria-live="polite"></span><button type="button" class="link-btn" id="play-reset" data-i18n="play.reset">Reset</button></div>
+      </div>
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="drag.eyebrow">Drag and drop</span>
+        <h2 class="display"><span data-i18n="drag.title">Tidy up in one gesture</span><span class="dot">.</span></h2>
+        <p data-i18n="drag.body">Drop a conversation onto a folder, drag folders into each other, or file several chats at once from the “Add conversations” panel. Try it here, with a mouse or a finger.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="appearance">
+    <div class="wrap split">
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="look.eyebrow">Appearance</span>
+        <h2 class="display"><span data-i18n="look.title">Make it yours</span><span class="dot">.</span></h2>
+        <p data-i18n="look.body">A name, an emoji and a color for every folder, so you tell “Legal” from “Launch” before you read a word.</p>
+      </div>
+      <div class="panel editor reveal">
+        <div class="left">
+          <div class="cl-sec"><span data-i18n="cl.folders">Folders</span><span></span></div>
+          <div class="tree">
+            <div class="tr folder" id="ed-row" style="border-bottom:0"><svg class="chev" aria-hidden="true"><use href="#i-chev"/></svg><span class="emo" id="ed-emo">📣</span><span class="tx" id="ed-name">Marketing</span><span class="n">3</span></div>
+            <div class="kids" id="ed-kids">
+              <div class="tr folder" data-collapsed><svg class="chev" aria-hidden="true"><use href="#i-chev"/></svg><svg class="fic" aria-hidden="true"><use href="#i-folder"/></svg><span class="tx" data-i18n="fold.launch">Launch</span><span class="n">2</span></div>
+              <div class="tr"><span class="tx" data-i18n="conv.tweet">Launch tweet thread</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="pop">
+          <h3 data-i18n="ed.title">Edit folder</h3>
+          <label for="ed-input" data-i18n="ed.name">Name</label>
+          <input id="ed-input" maxlength="28" value="Marketing">
+          <span class="lbl" data-i18n="ed.emoji">Emoji</span>
+          <div class="emojis" id="ed-emojis"></div>
+          <span class="lbl" data-i18n="ed.color">Color</span>
+          <div class="swatches" id="ed-colors"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="toolbar">
+    <div class="wrap split rev">
+      <div class="popup-slot reveal" id="popup-slot"><div class="popup">
+        <div class="popup-head"><img src="assets/icon-128.png" alt="" width="28" height="28">Nest for Claude</div>
+        <div class="stats">
+          <div class="stat"><b data-count="4">4</b><small data-i18n="pop.projects">projects</small></div>
+          <div class="stat"><b data-count="17">17</b><small data-i18n="pop.folders">folders</small></div>
+          <div class="stat"><b data-count="132">132</b><small data-i18n="pop.filed">filed chats</small></div>
+        </div>
+        <label class="toggle" id="hide-toggle"><span data-i18n="pop.hide">Hide filed conversations</span><button type="button" class="switch" role="switch" aria-checked="false" id="hide-switch" data-i18n-aria="pop.hide" aria-label="Hide filed conversations"></button></label>
+        <div class="popup-list">
+          <div data-i18n="conv.roadmap">Q3 roadmap priorities</div>
+          <div class="filed"><span data-i18n="conv.press">Press release outline</span><small>Launch</small></div>
+          <div data-i18n="conv.bugs">Bug triage checklist</div>
+          <div class="filed"><span data-i18n="conv.tweet">Launch tweet thread</span><small>Marketing</small></div>
+          <div class="filed"><span data-i18n="conv.hero">Landing page hero headline</span><small>Launch</small></div>
+        </div>
+        <div class="popup-actions"><button type="button" data-i18n="pop.backup">Back up</button><button type="button" data-i18n="pop.restore">Restore</button></div>
+      </div></div>
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="tb.eyebrow">Toolbar menu</span>
+        <h2 class="display"><span data-i18n="tb.title">Only see what's left to sort</span><span class="dot">.</span></h2>
+        <p data-i18n="tb.body">Hide or dim conversations you've already filed, check what's stored, and export everything to a JSON file you can restore later. The menu only wakes up on claude.ai tabs.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="privacy">
+    <div class="wrap">
+      <div class="sec-head reveal" style="max-width:760px">
+        <span class="eyebrow" data-i18n="priv.eyebrow">Private by design</span>
+        <h2 class="display"><span data-i18n="priv.title">Your folders live in your browser</span><span class="dot">.</span></h2>
+        <p data-i18n="priv.body">No account, no server, no analytics. Everything is stored locally by your browser, and the extension asks for the smallest set of permissions it can.</p>
+      </div>
+      <div class="ledger reveal">
+        <div><b>0</b><span data-i18n="l1.t">network requests</span><p data-i18n="l1.b">The extension never calls out. Not to us, not to anyone.</p></div>
+        <div><b>0</b><span data-i18n="l2.t">accounts</span><p data-i18n="l2.b">Install it and it works. Nothing to sign up for.</p></div>
+        <div><b>2</b><span data-i18n="l3.t">permissions</span><p data-i18n="l3.b">Local storage and access to claude.ai. That's the full list.</p></div>
+        <div><b>MIT</b><span data-i18n="l4.t">open source</span><p data-i18n="l4.b">Every line is on GitHub, ready to read and audit.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="on-stage finale">
+    <div class="rays" aria-hidden="true"></div>
+    <div class="wrap">
+      <img class="egg" src="assets/icon-128.png" alt="" width="128" height="128">
+      <h2 class="display"><span data-i18n="fin.title">Give your chats a home</span><span style="color:#c4623c">.</span></h2>
+      <p data-i18n="fin.body">Free, open source, installed in seconds. Your sidebar will thank you on Monday morning.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary js-cta" href="#download"><svg class="js-cta-icon" aria-hidden="true"><use href="#i-download"/></svg><span class="js-cta-label">Download</span></a>
+        <a class="btn btn-ghost" href="#download" data-i18n="fin.all">All download options</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ DOWNLOAD ============ -->
+<main id="download-view" hidden>
+  <section class="on-stage dl-hero">
+    <div class="rays" aria-hidden="true"></div>
+    <div class="wrap">
+      <span class="eyebrow" style="color:#e08a66" data-i18n="dl.eyebrow">Download · v1.0.0</span>
+      <h1 class="display"><span data-i18n="dl.title">Get Nest for Claude</span><span style="color:#c4623c">.</span></h1>
+      <p data-i18n="dl.body">Pick your browser. The store version updates itself; the manual build is there if you prefer to install from source.</p>
+      <span class="detected" id="detected"><i></i><span></span></span>
+    </div>
+  </section>
+  <div class="wrap">
+    <div class="dl-grid">
+      <article class="dl-card" data-browser="chromium">
+        <span class="badge" data-i18n="dl.yours" hidden>Your browser</span>
+        <div class="bico"><svg aria-hidden="true"><use href="#i-chrome"/></svg></div>
+        <h3>Chrome</h3>
+        <p data-i18n="dl.chrome.b">From the Chrome Web Store. Works in every Chromium browser.</p>
+        <div class="works"><span>Chrome</span><span>Edge</span><span>Brave</span><span>Arc</span><span>Opera</span><span>Vivaldi</span></div>
+        <a class="btn btn-primary js-store" href="#download" data-store="chrome"><svg aria-hidden="true"><use href="#i-chrome"/></svg><span class="js-store-label">Add to Chrome</span></a>
+      </article>
+      <article class="dl-card" data-browser="firefox">
+        <span class="badge" data-i18n="dl.yours" hidden>Your browser</span>
+        <div class="bico"><svg aria-hidden="true"><use href="#i-firefox"/></svg></div>
+        <h3>Firefox</h3>
+        <p data-i18n="dl.ff.b">From Firefox Add-ons. Desktop Firefox 115 and later.</p>
+        <div class="works"><span>Firefox</span><span>Zen</span><span>LibreWolf</span><span>Floorp</span></div>
+        <a class="btn btn-primary js-store" href="#download" data-store="firefox"><svg aria-hidden="true"><use href="#i-firefox"/></svg><span class="js-store-label">Add to Firefox</span></a>
+      </article>
+      <article class="dl-card" data-browser="manual">
+        <div class="bico"><svg aria-hidden="true"><use href="#i-github"/></svg></div>
+        <h3 data-i18n="dl.manual.t">Manual install</h3>
+        <p data-i18n="dl.manual.b">Download the zip from the latest GitHub release, then load it yourself.</p>
+        <ol class="steps">
+          <li data-i18n="dl.s1">Unzip the Chrome or Firefox build.</li>
+          <li><span data-i18n="dl.s2">Chrome: open</span> <code>chrome://extensions</code>, <span data-i18n="dl.s2b">turn on Developer mode, then “Load unpacked”.</span></li>
+          <li><span data-i18n="dl.s3">Firefox: open</span> <code>about:debugging</code> <span data-i18n="dl.s3b">and “Load Temporary Add-on”.</span></li>
+        </ol>
+        <a class="btn btn-ghost" href="https://github.com/Azurioh/nest-for-claude/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-github"/></svg><span data-i18n="dl.manual.cta">Latest release</span></a>
+      </article>
+    </div>
+    <div class="dl-meta"><span data-i18n="dl.m1">Permissions: storage, claude.ai</span><span data-i18n="dl.m2">Size: under 100 KB</span><span data-i18n="dl.m3">Languages: English, French</span><span data-i18n="dl.m4">Not available on mobile browsers</span></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span data-i18n="foot.disclaimer">Nest for Claude is an independent project, not affiliated with or endorsed by Anthropic.</span>
+    <nav aria-label="Footer"><a href="#download" data-i18n="nav.download">Download</a><a href="https://github.com/Azurioh/nest-for-claude" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/Azurioh/nest-for-claude/blob/main/LICENSE" target="_blank" rel="noopener" data-i18n="foot.license">MIT License</a><a href="https://github.com/Azurioh/nest-for-claude/issues" target="_blank" rel="noopener" data-i18n="foot.issue">Report an issue</a></nav>
+  </div>
+</footer>
+</body>
+</html>
