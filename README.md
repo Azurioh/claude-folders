@@ -1,10 +1,12 @@
-<p align="center">
-  <img src="docs/brand/icon-512.png" width="128" height="128" alt="Nest for Claude logo: folders in a bird's nest">
-</p>
+<div align="center">
 
-# Nest for Claude
+<img src="docs/brand/icon-512.png" width="128" height="128" alt="Nest for Claude logo: folders in a bird's nest">
 
-> Nested folders for your claude.ai conversations — organized per project, stored only in your browser.
+<h1>Nest for Claude</h1>
+
+<p>Nested folders for your claude.ai conversations — organized per project, stored only in your browser.</p>
+
+</div>
 
 <p align="center">
   <a href="#install"><img src="https://img.shields.io/badge/Chrome_Web_Store-coming_soon-lightgrey?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Web Store: coming soon"></a>
