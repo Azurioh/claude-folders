@@ -118,5 +118,10 @@ Collected data: **none**. Tick the three certifications:
 | Asset | Size | Source |
 | --- | --- | --- |
 | Store icon | 128×128 | `public/icon-128.png` |
-| Screenshots (Chrome: 1–5, AMO: any) | 1280×800 | Stills rendered from the launch film's UI recreation |
-| Chrome small promo tile | 440×280 | Logo on brand background |
+| Chrome screenshots (1–5) | 1280×800 | `docs/store/1280x800/` |
+| AMO screenshots, README, social | 2560×1600 | `docs/store/2560x1600/` |
+| Chrome small promo tile | 440×280 | `docs/store/promo/promo-440x280.png` (2× version alongside) |
+| Chrome marquee | 1400×560 | `docs/store/marquee/marquee-1400x560.png` (2× version alongside) |
+
+The stills are rendered from the launch film's recreation of the extension UI. PNGs are 24-bit
+without alpha (Chrome rejects alpha) and losslessly optimised with `oxipng -o 4`.
