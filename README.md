@@ -49,6 +49,10 @@ folders and sub-folders of conversations, per project, to the claude.ai sidebar 
   </tr>
 </table>
 
+## See it in action
+
+https://github.com/user-attachments/assets/3915f090-7c6d-4de6-9696-ad6ee1746edf
+
 ## Install
 
 Store listings (Chrome Web Store, Firefox Add-ons) are coming soon.
