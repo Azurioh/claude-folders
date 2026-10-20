@@ -29,6 +29,7 @@ Chrome limit: 132 characters. AMO summary limit: 250 characters.
 >
 > **Organize**
 > - Create folders and sub-folders inside each project, as deep as you need.
+> - Start a new session straight from a folder: it is filed there as soon as you send the first message.
 > - Drag and drop conversations and folders, or file them from the "Add conversations" panel.
 > - Give each folder a name, an emoji and a colour.
 > - Optionally hide filed conversations from the Recents list.
@@ -40,7 +41,8 @@ Chrome limit: 132 characters. AMO summary limit: 250 characters.
 >
 > **Private by design**
 > - Everything is stored in your browser (`storage.local`). No account, no server, no analytics.
-> - The extension only runs on claude.ai and makes no network requests.
+> - The extension only runs on claude.ai (its toolbar icon is greyed elsewhere) and makes no network
+>   requests.
 > - Export your folders to a JSON file and import them back at any time.
 >
 > Free and open source (MIT): https://github.com/Azurioh/nest-for-claude
@@ -59,6 +61,7 @@ Chrome limit: 132 characters. AMO summary limit: 250 characters.
 >
 > **Organiser**
 > - Créez des dossiers et sous-dossiers dans chaque projet, sans limite de profondeur.
+> - Démarrez une nouvelle session directement depuis un dossier : elle y est rangée dès le premier message envoyé.
 > - Glissez-déposez conversations et dossiers, ou rangez-les depuis le panneau « Ajouter des conversations ».
 > - Donnez à chaque dossier un nom, un emoji et une couleur.
 > - Masquez si vous le souhaitez les conversations rangées de la liste Récents.
@@ -70,7 +73,8 @@ Chrome limit: 132 characters. AMO summary limit: 250 characters.
 >
 > **Respect de la vie privée**
 > - Tout est stocké dans votre navigateur (`storage.local`). Aucun compte, aucun serveur, aucune statistique.
-> - L'extension ne s'exécute que sur claude.ai et n'effectue aucune requête réseau.
+> - L'extension ne s'exécute que sur claude.ai (son icône est grisée ailleurs) et n'effectue aucune
+>   requête réseau.
 > - Exportez vos dossiers dans un fichier JSON et réimportez-les à tout moment.
 >
 > Gratuit et open source (MIT) : https://github.com/Azurioh/nest-for-claude
@@ -114,5 +118,5 @@ Collected data: **none**. Tick the three certifications:
 | Asset | Size | Source |
 | --- | --- | --- |
 | Store icon | 128×128 | `public/icon-128.png` |
-| Screenshots (Chrome: 1–5, AMO: any) | 1280×800 | Captured from the extension, light and dark themes |
+| Screenshots (Chrome: 1–5, AMO: any) | 1280×800 | Stills rendered from the launch film's UI recreation |
 | Chrome small promo tile | 440×280 | Logo on brand background |
