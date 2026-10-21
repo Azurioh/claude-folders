@@ -624,6 +624,8 @@
         sy = e.clientY;
         row.setPointerCapture(e.pointerId);
       });
+      // iOS Safari still pans despite touch-action: none, cancelling the pointer mid-drag.
+      row.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
       row.addEventListener('pointermove', (e) => {
         if (!row.hasPointerCapture(e.pointerId)) {
           return;
