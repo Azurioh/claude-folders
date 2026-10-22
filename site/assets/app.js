@@ -2,7 +2,8 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   // Store listings: set each to its store URL once published; null shows "Coming soon".
   const LINKS = {
-    chrome: null,
+    chrome:
+      'https://chromewebstore.google.com/detail/nest-for-claude/dcclbhmkfjmobiadcdhcjhdehfmppkjd',
     firefox: null,
   };
 
