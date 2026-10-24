@@ -1450,9 +1450,9 @@ footer a:hover {
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 26px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  align-content: start;
   position: relative;
   transition:
     transform 300ms var(--ease),
@@ -1503,6 +1503,7 @@ footer a:hover {
   font-size: 15px;
 }
 .dl-card .works {
+  margin-top: auto;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -1524,7 +1525,7 @@ footer a:hover {
   pointer-events: none;
 }
 .steps {
-  margin: 0;
+  margin: auto 0 0;
   padding-left: 20px;
   color: var(--muted);
   font-size: 14.5px;
