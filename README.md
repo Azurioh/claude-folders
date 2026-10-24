@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/nest-for-claude/dcclbhmkfjmobiadcdhcjhdehfmppkjd"><img src="https://img.shields.io/chrome-web-store/v/dcclbhmkfjmobiadcdhcjhdehfmppkjd?style=flat-square&logo=googlechrome&logoColor=white&label=Chrome%20Web%20Store" alt="Chrome Web Store"></a>
-  <a href="#install"><img src="https://img.shields.io/badge/Firefox_Add--ons-coming_soon-lightgrey?style=flat-square&logo=firefoxbrowser&logoColor=white" alt="Firefox Add-ons: coming soon"></a>
+  <a href="https://addons.mozilla.org/firefox/addon/nest-for-claude/"><img src="https://img.shields.io/amo/v/nest-for-claude?style=flat-square&logo=firefoxbrowser&logoColor=white&label=Firefox%20Add-ons" alt="Firefox Add-ons"></a>
   <br>
   <a href="https://github.com/Azurioh/nest-for-claude/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Azurioh/nest-for-claude/ci.yml?branch=main&style=flat-square&label=CI" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/Azurioh/nest-for-claude?style=flat-square&color=161b22" alt="License: MIT"></a>
@@ -76,7 +76,7 @@ https://github.com/user-attachments/assets/3915f090-7c6d-4de6-9696-ad6ee1746edf
 
 - **Chrome and Chromium browsers** (Edge, Brave, Arc, Opera, Vivaldi): install from the
   [Chrome Web Store](https://chromewebstore.google.com/detail/nest-for-claude/dcclbhmkfjmobiadcdhcjhdehfmppkjd).
-- **Firefox**: the Firefox Add-ons listing is coming soon; until then, build from source.
+- **Firefox**: install from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/nest-for-claude/).
 
 ### From source
 
