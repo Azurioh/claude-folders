@@ -4,7 +4,7 @@
   const LINKS = {
     chrome:
       'https://chromewebstore.google.com/detail/nest-for-claude/dcclbhmkfjmobiadcdhcjhdehfmppkjd',
-    firefox: null,
+    firefox: 'https://addons.mozilla.org/firefox/addon/nest-for-claude/',
   };
 
   /* ---------- i18n ---------- */
