@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/Azurioh/nest-for-claude/compare/nest-for-claude-v1.0.0...nest-for-claude-v1.1.0) (2026-10-24)
+
+
+### Features
+
+* add landing site ([#30](https://github.com/Azurioh/nest-for-claude/issues/30)) ([043250f](https://github.com/Azurioh/nest-for-claude/commit/043250f220afd0f5994f751b0ee9e4b61a60b1d9))
+
+
+### Bug Fixes
+
+* align download card tags and buttons to the bottom ([#36](https://github.com/Azurioh/nest-for-claude/issues/36)) ([3f85514](https://github.com/Azurioh/nest-for-claude/commit/3f85514dc3261f8e4780076da6d99dbe0e0f4c18))
+* keep site drag and drop working on iOS Safari ([#33](https://github.com/Azurioh/nest-for-claude/issues/33)) ([0108937](https://github.com/Azurioh/nest-for-claude/commit/0108937fbb0a13c830bc67aefdd5bc0067070d33))
+* widen landing page layout ([#32](https://github.com/Azurioh/nest-for-claude/issues/32)) ([b7cacf5](https://github.com/Azurioh/nest-for-claude/commit/b7cacf54eeac77095816927fc280a3b6410b53fe))
+
 ## 1.0.0 (2026-10-20)
 
 
